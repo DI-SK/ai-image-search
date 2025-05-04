@@ -35,25 +35,22 @@ function showResults(images) {
   });
 }
 
-// Real AI search using backend
-async function searchSimilarImagesReal(file) {
+// Pixabay search by keyword
+async function searchPixabayImages(file) {
+  let keyword = file.name.split(/[^a-zA-Z0-9]/).filter(Boolean)[0] || 'nature';
   setLoading(true);
   resultsDiv.innerHTML = '';
-  const formData = new FormData();
-  formData.append('image', file);
-
-  const resp = await fetch('/api/visual-search', {
-    method: 'POST',
-    body: formData,
-  });
+  const apiKey = '50094662-d568135692c916b3b343edefa'; // <-- Replace with your actual key
+  const url = `https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(keyword)}&image_type=photo&per_page=8`;
+  const resp = await fetch(url);
   setLoading(false);
-
   if (!resp.ok) {
     showResults([]);
     return;
   }
   const data = await resp.json();
-  showResults(data.images || []);
+  const images = (data.hits || []).map(hit => hit.webformatURL);
+  showResults(images);
 }
 
 // Main upload handler
@@ -61,7 +58,7 @@ uploadInput.addEventListener('change', e => {
   const file = e.target.files[0];
   if (!file) return;
   showPreview(file);
-  searchSimilarImagesReal(file);
+  searchPixabayImages(file);
 });
 
 // document.querySelector('.ai-upload-label').addEventListener('click', () => {
