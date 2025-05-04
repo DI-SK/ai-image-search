@@ -1,8 +1,8 @@
-// AI Image Search Logic
 const uploadInput = document.getElementById('ai-upload');
 const previewImg = document.getElementById('ai-image-preview');
 const resultsDiv = document.getElementById('ai-results');
 const loadingDiv = document.getElementById('ai-loading');
+const statusDiv = document.getElementById('ai-status');
 
 // Helper: Show preview
 function showPreview(file) {
@@ -14,12 +14,10 @@ function showPreview(file) {
   reader.readAsDataURL(file);
 }
 
-// Helper: Show loading
 function setLoading(isLoading) {
   loadingDiv.style.display = isLoading ? 'block' : 'none';
 }
 
-// Helper: Show results
 function showResults(images) {
   resultsDiv.innerHTML = '';
   if (!images.length) {
@@ -35,12 +33,23 @@ function showResults(images) {
   });
 }
 
-// Pixabay search by keyword
-async function searchPixabayImages(file) {
-  let keyword = file.name.split(/[^a-zA-Z0-9]/).filter(Boolean)[0] || 'nature';
+async function classifyImage(imgElement) {
+  statusDiv.textContent = 'Classifying image...';
+  const model = await mobilenet.load();
+  const predictions = await model.classify(imgElement);
+  if (predictions && predictions.length > 0) {
+    statusDiv.textContent = `Predicted: ${predictions[0].className}`;
+    return predictions[0].className;
+  } else {
+    statusDiv.textContent = 'Could not classify image.';
+    return 'nature';
+  }
+}
+
+async function searchPixabayImages(keyword) {
   setLoading(true);
   resultsDiv.innerHTML = '';
-  const apiKey = '50094662-d568135692c916b3b343edefa'; // <-- Replace with your actual key
+  const apiKey = 'YOUR_PIXABAY_API_KEY'; // <-- Replace with your actual key
   const url = `https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(keyword)}&image_type=photo&per_page=8`;
   const resp = await fetch(url);
   setLoading(false);
@@ -53,14 +62,13 @@ async function searchPixabayImages(file) {
   showResults(images);
 }
 
-// Main upload handler
-uploadInput.addEventListener('change', e => {
+uploadInput.addEventListener('change', async e => {
   const file = e.target.files[0];
   if (!file) return;
   showPreview(file);
-  searchPixabayImages(file);
+  // Wait for the image to load in the preview before classifying
+  previewImg.onload = async () => {
+    const keyword = await classifyImage(previewImg);
+    await searchPixabayImages(keyword);
+  };
 });
-
-// document.querySelector('.ai-upload-label').addEventListener('click', () => {
-//   uploadInput.click();
-// }); 

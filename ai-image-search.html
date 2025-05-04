@@ -71,6 +71,8 @@
       color: #1db954;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.16.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
 </head>
 <body>
   <div class="ai-container">
@@ -81,6 +83,7 @@
     <img id="ai-image-preview" alt="Preview" />
     <div id="ai-loading" style="display:none;margin:18px 0;color:#7eb6ff;">Searching for similar images...</div>
     <div class="ai-results" id="ai-results"></div>
+    <div id="ai-status" style="margin:12px 0;color:#1db954;font-weight:500;"></div>
     <a href="calculator with theme.html" class="back-link">← Back to Calculator</a>
   </div>
   <script src="ai-image-search.js"></script>
