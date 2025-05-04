@@ -14,10 +14,12 @@ function showPreview(file) {
   reader.readAsDataURL(file);
 }
 
+// Helper: Show loading
 function setLoading(isLoading) {
   loadingDiv.style.display = isLoading ? 'block' : 'none';
 }
 
+// Helper: Show results
 function showResults(images) {
   resultsDiv.innerHTML = '';
   if (!images.length) {
@@ -38,14 +40,17 @@ async function classifyImage(imgElement) {
   const model = await mobilenet.load();
   const predictions = await model.classify(imgElement);
   if (predictions && predictions.length > 0) {
-    statusDiv.textContent = `Predicted: ${predictions[0].className}`;
-    return predictions[0].className;
+    // Use only the first label before any comma
+    const firstLabel = predictions[0].className.split(',')[0].trim();
+    statusDiv.textContent = `Predicted: ${firstLabel}`;
+    return firstLabel;
   } else {
     statusDiv.textContent = 'Could not classify image.';
     return 'nature';
   }
 }
 
+// Pixabay search by keyword
 async function searchPixabayImages(keyword) {
   setLoading(true);
   resultsDiv.innerHTML = '';
@@ -62,6 +67,7 @@ async function searchPixabayImages(keyword) {
   showResults(images);
 }
 
+// Main upload handler
 uploadInput.addEventListener('change', async e => {
   const file = e.target.files[0];
   if (!file) return;
