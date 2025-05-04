@@ -49,7 +49,7 @@ async function classifyImage(imgElement) {
 async function searchPixabayImages(keyword) {
   setLoading(true);
   resultsDiv.innerHTML = '';
-  const apiKey = 'YOUR_PIXABAY_API_KEY'; // <-- Replace with your actual key
+  const apiKey = '50094662-d568135692c916b3b343edefa'; // <-- Replace with your actual key
   const url = `https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(keyword)}&image_type=photo&per_page=8`;
   const resp = await fetch(url);
   setLoading(false);
