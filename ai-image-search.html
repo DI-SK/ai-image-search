@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Image Search</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .ai-container {
+      max-width: 480px;
+      margin: 60px auto;
+      background: rgba(30, 34, 40, 0.75);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.25);
+      padding: 32px 24px 24px 24px;
+      text-align: center;
+      backdrop-filter: blur(12px) saturate(1.1);
+    }
+    .ai-container h2 {
+      margin-bottom: 18px;
+      color: #7eb6ff;
+      letter-spacing: 1px;
+    }
+    .ai-upload-label {
+      display: inline-block;
+      padding: 12px 28px;
+      background: #2d6cdf;
+      color: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      margin-bottom: 18px;
+      transition: background 0.2s;
+    }
+    .ai-upload-label:hover {
+      background: #1b3e7a;
+    }
+    #ai-image-preview {
+      max-width: 220px;
+      max-height: 220px;
+      margin: 18px auto 18px auto;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px #0002;
+      display: none;
+    }
+    .ai-results {
+      margin-top: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+    }
+    .ai-result-img {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 10px;
+      box-shadow: 0 1px 6px #0002;
+      background: #fff;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 18px;
+      color: #2d6cdf;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 1rem;
+      transition: color 0.2s;
+    }
+    .back-link:hover {
+      color: #1db954;
+    }
+  </style>
+</head>
+<body>
+  <div class="ai-container">
+    <h2>AI Image Similarity Search</h2>
+    <label for="ai-upload" class="ai-upload-label">Upload an Image</label>
+    <input type="file" id="ai-upload" accept="image/*" style="display:none;">
+    <br>
+    <img id="ai-image-preview" alt="Preview" />
+    <div id="ai-loading" style="display:none;margin:18px 0;color:#7eb6ff;">Searching for similar images...</div>
+    <div class="ai-results" id="ai-results"></div>
+    <a href="calculator with theme.html" class="back-link">← Back to Calculator</a>
+  </div>
+  <script src="ai-image-search.js"></script>
+</body>
+</html> 

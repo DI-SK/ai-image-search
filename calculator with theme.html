@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="theme-selector">
+    <h3>Themes</h3>
+    <button class="theme-btn" data-theme="spaceship">Spaceship</button>
+    <button class="theme-btn" data-theme="light">Light</button>
+    <button class="theme-btn" data-theme="dark">Dark</button>
+    <button class="theme-btn" data-theme="retro">Retro</button>
+    <button class="theme-btn" data-theme="neon">Neon</button>
+    <hr style="width:80%;margin:12px 0;border:0;border-top:1px solid #444;">
+    <label for="bg-upload" class="theme-btn" style="text-align:center;cursor:pointer;">Upload Background</label>
+    <input type="file" id="bg-upload" accept="image/*" style="display:none;">
+    <button class="theme-btn" id="bg-reset" style="margin-top:4px;">Reset Background</button>
+  </div>
+  <div class="calculator">
+    <button id="theme-toggle" title="Show/hide themes">☰</button>
+    <input type="text" class="calculator-display" id="display" disabled />
+    <div class="calculator-buttons scientific">
+      <button class="btn" data-value="(">(</button>
+      <button class="btn" data-value=")">)</button>
+      <button class="btn" data-value="Math.PI">π</button>
+      <button class="btn" data-value="Math.E">e</button>
+      <button class="btn" data-value="sin(">sin</button>
+      <button class="btn" data-value="cos(">cos</button>
+      <button class="btn" data-value="tan(">tan</button>
+      <button class="btn" data-value="sqrt(">√</button>
+      <button class="btn" data-value="log10(">log</button>
+      <button class="btn" data-value="log(">ln</button>
+      <button class="btn" data-value="^">^</button>
+      <button class="btn" id="backspace">⌫</button>
+    </div>
+    <div class="calculator-buttons">
+      <button class="btn" data-value="7">7</button>
+      <button class="btn" data-value="8">8</button>
+      <button class="btn" data-value="9">9</button>
+      <button class="btn operator" data-value="/">&divide;</button>
+      <button class="btn" data-value="4">4</button>
+      <button class="btn" data-value="5">5</button>
+      <button class="btn" data-value="6">6</button>
+      <button class="btn operator" data-value="*">&times;</button>
+      <button class="btn" data-value="1">1</button>
+      <button class="btn" data-value="2">2</button>
+      <button class="btn" data-value="3">3</button>
+      <button class="btn operator" data-value="-">&minus;</button>
+      <button class="btn" data-value="0">0</button>
+      <button class="btn" data-value=".">.</button>
+      <button class="btn" id="clear">C</button>
+      <button class="btn operator" data-value="+">+</button>
+      <button class="btn equal" id="equals">=</button>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:32px;">
+    <a href="ai-image-search.html" style="display:inline-block;padding:12px 28px;background:#2d6cdf;color:#fff;border-radius:8px;text-decoration:none;font-size:1.1rem;font-weight:500;box-shadow:0 2px 8px #0002;transition:background 0.2s;">Try AI Image Search →</a>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/decimal.js@10.4.3/decimal.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html> 
