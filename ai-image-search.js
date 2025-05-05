@@ -183,7 +183,9 @@ async function fetchSimilarImages(searchTerms) {
     try {
         resultsDiv.innerHTML = '';
 
-        const response = await fetch(`https://source.unsplash.com/featured/?${searchTerms}`);
+        // Construct URL properly, replacing spaces with '+' and ensuring no trailing invalid characters
+        const formattedTerms = searchTerms.replace(/\s/g, '+').replace(/,+$/, '');
+        const response = await fetch(`https://source.unsplash.com/featured/?${formattedTerms}`);
 
         if (response.ok) {
             const imageUrl = response.url;
