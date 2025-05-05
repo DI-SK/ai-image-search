@@ -65,15 +65,10 @@ async function initializeModels() {
     try {
         loadingDiv.style.display = 'block';
         statusDiv.textContent = 'Loading AI models...';
-        
+
         // Load MobileNet for general object recognition
         model = await mobilenet.load();
-        
-        // Load face-api.js TinyFaceDetector model
-        await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/face-api.js/weights');
-        
-        // Additional models could be loaded here for specialized recognition
-        
+
         statusDiv.textContent = 'AI models ready!';
         loadingDiv.style.display = 'none';
     } catch (error) {
