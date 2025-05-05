@@ -93,15 +93,20 @@ async function analyzeImage(img) {
             .sort((a, b) => b.probability - a.probability)
             .slice(0, 5)
             .map(p => p.className.split(',')[0].replace(/\s+/g, '-'))
+            .filter(Boolean)
             .join(',');
+        console.log('Search terms:', searchTerms); // Debug log
 
         // Show search terms in the UI
-        statusDiv.textContent = 'Search terms: ' + searchTerms;
-
-        // Fetch similar images
-        await fetchSimilarImages(searchTerms);
-
-        statusDiv.textContent += '\nAnalysis complete!';
+        if (searchTerms) {
+            statusDiv.textContent = 'Search terms: ' + searchTerms;
+            // Fetch similar images only if search terms are valid
+            await fetchSimilarImages(searchTerms);
+            statusDiv.textContent += '\nAnalysis complete!';
+        } else {
+            statusDiv.textContent = 'No valid search terms found. Unable to fetch similar images.';
+            resultsDiv.innerHTML = '';
+        }
         loadingDiv.style.display = 'none';
 
         // Optionally, display detailed results (MobileNet predictions)
