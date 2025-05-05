@@ -1,162 +1,3 @@
-// Theme management
-const themeToggle = document.getElementById('theme-toggle');
-const themeSelector = document.querySelector('.theme-selector');
-const themeButtons = document.querySelectorAll('.theme-btn');
-
-// Load saved theme
-const savedTheme = localStorage.getItem('theme') || 'light';
-document.body.setAttribute('data-theme', savedTheme);
-
-if (themeToggle && themeSelector) {
-  themeToggle.addEventListener('click', () => {
-    themeSelector.classList.toggle('visible');
-  });
-}
-
-if (themeButtons && themeButtons.length > 0) {
-  themeButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const theme = btn.getAttribute('data-theme');
-      document.body.setAttribute('data-theme', theme);
-      localStorage.setItem('theme', theme);
-      themeSelector.classList.remove('visible');
-    });
-  });
-}
-
-if (themeSelector && themeToggle) {
-  document.addEventListener('click', (e) => {
-    if (!themeSelector.contains(e.target) && e.target !== themeToggle) {
-      themeSelector.classList.remove('visible');
-    }
-  });
-}
-
-// Calculator Logic
-const display = document.getElementById('display');
-const buttons = document.querySelectorAll('.btn');
-const clearBtn = document.getElementById('clear');
-const equalsBtn = document.getElementById('equals');
-const backspaceBtn = document.getElementById('backspace');
-
-let currentExpression = '';
-let lastResult = '';
-
-// Helper: Format number for display
-function formatNumber(num) {
-  if (typeof num === 'number') {
-    return num.toString().length > 10 ? num.toExponential(6) : num.toString();
-  }
-  return num;
-}
-
-// Helper: Safe evaluation using Decimal.js
-function safeEval(expr) {
-  try {
-    // Replace mathematical functions
-    expr = expr.replace(/sin\(/g, 'Math.sin(')
-              .replace(/cos\(/g, 'Math.cos(')
-              .replace(/tan\(/g, 'Math.tan(')
-              .replace(/sqrt\(/g, 'Math.sqrt(')
-              .replace(/log10\(/g, 'Math.log10(')
-              .replace(/log\(/g, 'Math.log(')
-              .replace(/\^/g, '**');
-
-    // Evaluate using Function constructor for better safety
-    const result = new Function('return ' + expr)();
-    return typeof result === 'number' && isFinite(result) ? result : 'Error';
-  } catch (error) {
-    console.error('Evaluation error:', error);
-    return 'Error';
-  }
-}
-
-// Update display
-function updateDisplay() {
-  if (display) display.value = currentExpression || '0';
-}
-
-// Handle number and operator input
-if (buttons && buttons.length > 0) {
-  buttons.forEach(button => {
-    if (!button.id) {  // Skip special buttons (clear, equals, backspace)
-      button.addEventListener('click', () => {
-        const value = button.getAttribute('data-value');
-        if (value) {
-          if (lastResult && !isNaN(value[0])) {
-            // If starting new number after result, clear previous
-            currentExpression = value;
-            lastResult = '';
-          } else {
-            currentExpression += value;
-          }
-          updateDisplay();
-        }
-      });
-    }
-  });
-}
-
-if (clearBtn) {
-  clearBtn.addEventListener('click', () => {
-    currentExpression = '';
-    lastResult = '';
-    updateDisplay();
-  });
-}
-
-if (backspaceBtn) {
-  backspaceBtn.addEventListener('click', () => {
-    currentExpression = currentExpression.slice(0, -1);
-    updateDisplay();
-  });
-}
-
-if (equalsBtn) {
-  equalsBtn.addEventListener('click', () => {
-    if (currentExpression) {
-      const result = safeEval(currentExpression);
-      currentExpression = formatNumber(result);
-      lastResult = currentExpression;
-      updateDisplay();
-    }
-  });
-}
-
-// Background upload
-const bgUpload = document.getElementById('bg-upload');
-const bgReset = document.getElementById('bg-reset');
-
-if (bgUpload) {
-  bgUpload.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-      const url = ev.target.result;
-      document.body.classList.add('custom-bg');
-      document.body.style.backgroundImage = `url('${url}')`;
-      localStorage.setItem('customBg', url);
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-const bgUploadLabel = document.querySelector('label[for="bg-upload"]');
-if (bgUploadLabel && bgUpload) {
-  bgUploadLabel.addEventListener('click', () => {
-    bgUpload.click();
-  });
-}
-
-if (bgReset) {
-  bgReset.addEventListener('click', () => {
-    document.body.classList.remove('custom-bg');
-    document.body.style.backgroundImage = '';
-    localStorage.removeItem('customBg');
-  });
-}
-
 // script.js for Trending Now homepage
 // Fetch and display trending articles from NewsAPI
 
@@ -257,9 +98,6 @@ async function fetchTrendingArticles(category = 'all') {
   }
 }
 
-// Fetch articles on page load
-if (articleList) fetchTrendingArticles();
-
 // --- Trending AI Videos from YouTube ---
 const YT_API_KEY = 'AIzaSyCM2J0ZWN7csPR22sdWyi6l4StinbW0JS0';
 const videoList = document.getElementById('video-list');
@@ -320,17 +158,16 @@ async function fetchTrendingVideos(category = 'all') {
   }
 }
 
-if (videoList) fetchTrendingVideos();
-if (videoCategoryFilter) {
-  videoCategoryFilter.addEventListener('change', e => {
-    fetchTrendingVideos(e.target.value);
-  });
-}
-
-// --- Article Category Filter ---
+if (articleList) fetchTrendingArticles();
 const articleCategoryFilter = document.getElementById('article-category-filter');
 if (articleCategoryFilter) {
   articleCategoryFilter.addEventListener('change', e => {
     fetchTrendingArticles(e.target.value);
+  });
+}
+if (videoList) fetchTrendingVideos();
+if (videoCategoryFilter) {
+  videoCategoryFilter.addEventListener('change', e => {
+    fetchTrendingVideos(e.target.value);
   });
 } 
