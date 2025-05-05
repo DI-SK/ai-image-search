@@ -88,6 +88,7 @@ async function analyzeImage(img) {
 
         // Get predictions from MobileNet with increased topk
         const predictions = await model.classify(img, { topk: 20 }); // Increased from default
+        console.log('MobileNet predictions:', predictions); // Debug log
         
         // Enhanced analysis results
         const results = {
