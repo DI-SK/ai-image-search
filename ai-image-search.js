@@ -184,10 +184,10 @@ function generateSearchTerms(results) {
         allTerms.push(...predictions
             .sort((a, b) => b.confidence - a.confidence)
             .slice(0, 2)
-            .map(p => p.label));
+            .map(p => p.label.split(' ')[0])); // Use only the first word of each label
     }
-    // Limit to top 5 terms overall
-    return allTerms.slice(0, 5).join(' ');
+    // Limit to top 5 terms overall, remove duplicates
+    return [...new Set(allTerms)].slice(0, 5).join(',');
 }
 
 // Fetch similar images using the generated search terms
