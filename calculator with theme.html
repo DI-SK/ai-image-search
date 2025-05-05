@@ -3,22 +3,285 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calculator</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>Smart Calculator</title>
+  <style>
+    :root {
+      /* Default theme (Light) */
+      --bg-primary: #f0f2f5;
+      --bg-secondary: #ffffff;
+      --text-primary: #2c3e50;
+      --text-secondary: #34495e;
+      --accent-color: #3498db;
+      --button-bg: #e9ecef;
+      --button-hover: #dee2e6;
+      --operator-bg: #3498db;
+      --operator-color: #ffffff;
+      --equal-bg: #2ecc71;
+      --equal-hover: #27ae60;
+      --shadow-color: rgba(0, 0, 0, 0.1);
+    }
+
+    /* Dark Theme */
+    [data-theme="dark"] {
+      --bg-primary: #1a1a1a;
+      --bg-secondary: #2d2d2d;
+      --text-primary: #ffffff;
+      --text-secondary: #cccccc;
+      --accent-color: #3498db;
+      --button-bg: #404040;
+      --button-hover: #505050;
+      --operator-bg: #2980b9;
+      --operator-color: #ffffff;
+      --equal-bg: #27ae60;
+      --equal-hover: #219a52;
+      --shadow-color: rgba(0, 0, 0, 0.3);
+    }
+
+    /* Neon Theme */
+    [data-theme="neon"] {
+      --bg-primary: #0a192f;
+      --bg-secondary: #112240;
+      --text-primary: #64ffda;
+      --text-secondary: #8892b0;
+      --accent-color: #ff79c6;
+      --button-bg: #1a365d;
+      --button-hover: #2a4365;
+      --operator-bg: #bd93f9;
+      --operator-color: #ffffff;
+      --equal-bg: #50fa7b;
+      --equal-hover: #3dbb5d;
+      --shadow-color: rgba(100, 255, 218, 0.1);
+    }
+
+    /* Retro Theme */
+    [data-theme="retro"] {
+      --bg-primary: #fdf6e3;
+      --bg-secondary: #eee8d5;
+      --text-primary: #657b83;
+      --text-secondary: #93a1a1;
+      --accent-color: #cb4b16;
+      --button-bg: #eee8d5;
+      --button-hover: #dcd4c1;
+      --operator-bg: #cb4b16;
+      --operator-color: #fdf6e3;
+      --equal-bg: #859900;
+      --equal-hover: #6c7c00;
+      --shadow-color: rgba(101, 123, 131, 0.1);
+    }
+
+    /* Spaceship Theme */
+    [data-theme="spaceship"] {
+      --bg-primary: #1e1e2e;
+      --bg-secondary: #302d41;
+      --text-primary: #cba6f7;
+      --text-secondary: #988ba2;
+      --accent-color: #f5c2e7;
+      --button-bg: #45475a;
+      --button-hover: #585b70;
+      --operator-bg: #89dceb;
+      --operator-color: #1e1e2e;
+      --equal-bg: #abe9b3;
+      --equal-hover: #8bd5a1;
+      --shadow-color: rgba(203, 166, 247, 0.1);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg-primary);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      color: var(--text-primary);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: background-color 0.3s;
+    }
+
+    .calculator {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 10px 30px var(--shadow-color);
+      position: relative;
+      max-width: 320px;
+      width: 100%;
+      transition: all 0.3s;
+    }
+
+    .calculator-display {
+      width: 100%;
+      height: 60px;
+      margin-bottom: 20px;
+      padding: 0 16px;
+      font-size: 1.8rem;
+      text-align: right;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 2px solid var(--accent-color);
+      border-radius: 12px;
+      outline: none;
+    }
+
+    .calculator-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .calculator-buttons.scientific {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .btn {
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      background: var(--button-bg);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: var(--button-hover);
+      transform: translateY(-2px);
+    }
+
+    .operator {
+      background: var(--operator-bg);
+      color: var(--operator-color);
+    }
+
+    .equal {
+      background: var(--equal-bg);
+      color: white;
+      grid-column: span 4;
+    }
+
+    .equal:hover {
+      background: var(--equal-hover);
+    }
+
+    #theme-toggle {
+      position: absolute;
+      top: -50px;
+      right: 0;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent-color);
+      color: var(--bg-secondary);
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .theme-selector {
+      position: fixed;
+      top: 20px;
+      right: -250px;
+      width: 200px;
+      background: var(--bg-secondary);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px var(--shadow-color);
+      transition: right 0.3s;
+    }
+
+    .theme-selector.visible {
+      right: 20px;
+    }
+
+    .theme-selector h3 {
+      margin: 0 0 15px 0;
+      color: var(--text-primary);
+    }
+
+    .theme-btn {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      border: none;
+      border-radius: 8px;
+      background: var(--button-bg);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .theme-btn:hover {
+      background: var(--button-hover);
+      transform: translateX(5px);
+    }
+
+    .ai-link {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 28px;
+      background: var(--accent-color);
+      color: var(--bg-secondary);
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 1.1rem;
+      font-weight: 500;
+      box-shadow: 0 2px 8px var(--shadow-color);
+      transition: all 0.2s;
+    }
+
+    .ai-link:hover {
+      transform: translateX(-50%) translateY(-2px);
+      box-shadow: 0 4px 12px var(--shadow-color);
+    }
+
+    @media (max-width: 480px) {
+      .calculator {
+        margin: 20px;
+        padding: 16px;
+      }
+
+      .btn {
+        padding: 12px;
+        font-size: 1rem;
+      }
+
+      .calculator-display {
+        height: 50px;
+        font-size: 1.5rem;
+      }
+
+      .theme-selector {
+        top: auto;
+        bottom: -300px;
+        right: 50%;
+        transform: translateX(50%);
+        transition: bottom 0.3s;
+      }
+
+      .theme-selector.visible {
+        bottom: 80px;
+        right: 50%;
+      }
+
+      .ai-link {
+        padding: 10px 20px;
+        font-size: 1rem;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="theme-selector">
     <h3>Themes</h3>
-    <button class="theme-btn" data-theme="spaceship">Spaceship</button>
     <button class="theme-btn" data-theme="light">Light</button>
     <button class="theme-btn" data-theme="dark">Dark</button>
-    <button class="theme-btn" data-theme="retro">Retro</button>
     <button class="theme-btn" data-theme="neon">Neon</button>
-    <hr style="width:80%;margin:12px 0;border:0;border-top:1px solid #444;">
-    <label for="bg-upload" class="theme-btn" style="text-align:center;cursor:pointer;">Upload Background</label>
-    <input type="file" id="bg-upload" accept="image/*" style="display:none;">
-    <button class="theme-btn" id="bg-reset" style="margin-top:4px;">Reset Background</button>
+    <button class="theme-btn" data-theme="retro">Retro</button>
+    <button class="theme-btn" data-theme="spaceship">Spaceship</button>
   </div>
+
   <div class="calculator">
     <button id="theme-toggle" title="Show/hide themes">☰</button>
     <input type="text" class="calculator-display" id="display" disabled />
@@ -40,15 +303,15 @@
       <button class="btn" data-value="7">7</button>
       <button class="btn" data-value="8">8</button>
       <button class="btn" data-value="9">9</button>
-      <button class="btn operator" data-value="/">&divide;</button>
+      <button class="btn operator" data-value="/">÷</button>
       <button class="btn" data-value="4">4</button>
       <button class="btn" data-value="5">5</button>
       <button class="btn" data-value="6">6</button>
-      <button class="btn operator" data-value="*">&times;</button>
+      <button class="btn operator" data-value="*">×</button>
       <button class="btn" data-value="1">1</button>
       <button class="btn" data-value="2">2</button>
       <button class="btn" data-value="3">3</button>
-      <button class="btn operator" data-value="-">&minus;</button>
+      <button class="btn operator" data-value="-">−</button>
       <button class="btn" data-value="0">0</button>
       <button class="btn" data-value=".">.</button>
       <button class="btn" id="clear">C</button>
@@ -56,9 +319,9 @@
       <button class="btn equal" id="equals">=</button>
     </div>
   </div>
-  <div style="text-align:center;margin-top:32px;">
-    <a href="ai-image-search.html" style="display:inline-block;padding:12px 28px;background:#2d6cdf;color:#fff;border-radius:8px;text-decoration:none;font-size:1.1rem;font-weight:500;box-shadow:0 2px 8px #0002;transition:background 0.2s;">Try AI Image Search →</a>
-  </div>
+
+  <a href="ai-image-search.html" class="ai-link">Try AI Image Search →</a>
+
   <script src="https://cdn.jsdelivr.net/npm/decimal.js@10.4.3/decimal.min.js"></script>
   <script src="script.js"></script>
 </body>

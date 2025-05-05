@@ -1,120 +1,122 @@
-// Calculator logic and theme/background handling
-const display = document.getElementById('display');
-const buttons = document.querySelectorAll('.btn[data-value]');
-const equals = document.getElementById('equals');
-const clear = document.getElementById('clear');
-const backspace = document.getElementById('backspace');
+// Theme management
 const themeToggle = document.getElementById('theme-toggle');
 const themeSelector = document.querySelector('.theme-selector');
-const themeBtns = document.querySelectorAll('.theme-btn[data-theme]');
-const bgUpload = document.getElementById('bg-upload');
-const bgReset = document.getElementById('bg-reset');
+const themeButtons = document.querySelectorAll('.theme-btn');
 
-let expression = '';
-let lastResult = '';
+// Load saved theme
+const savedTheme = localStorage.getItem('theme') || 'light';
+document.body.setAttribute('data-theme', savedTheme);
 
-function updateDisplay(val) {
-  display.value = val;
-}
-
-function insertValue(val) {
-  expression += val;
-  updateDisplay(expression);
-}
-
-function clearDisplay() {
-  expression = '';
-  updateDisplay('');
-}
-
-function backspaceDisplay() {
-  expression = expression.slice(0, -1);
-  updateDisplay(expression);
-}
-
-function safeEval(expr) {
-  // Replace math functions and constants
-  let safe = expr
-    .replace(/π/g, 'Math.PI')
-    .replace(/e/g, 'Math.E')
-    .replace(/sin\(/g, 'Math.sin(')
-    .replace(/cos\(/g, 'Math.cos(')
-    .replace(/tan\(/g, 'Math.tan(')
-    .replace(/sqrt\(/g, 'Math.sqrt(')
-    .replace(/log10\(/g, 'Math.log10(')
-    .replace(/log\(/g, 'Math.log(')
-    .replace(/\^/g, '**');
-  // Use Decimal.js for numbers
-  try {
-    // eslint-disable-next-line no-new-func
-    let result = Function('Decimal', `return Decimal(${safe})`)(Decimal);
-    return result.toString();
-  } catch (e) {
-    try {
-      // fallback to eval for scientific functions
-      // eslint-disable-next-line no-eval
-      let result = eval(safe);
-      return result;
-    } catch {
-      return 'Error';
-    }
-  }
-}
-
-buttons.forEach(btn => {
-  btn.addEventListener('click', () => {
-    insertValue(btn.getAttribute('data-value'));
-  });
-});
-
-equals.addEventListener('click', () => {
-  if (!expression) return;
-  let result = safeEval(expression);
-  updateDisplay(result);
-  lastResult = result;
-  expression = '';
-});
-
-clear.addEventListener('click', clearDisplay);
-backspace.addEventListener('click', backspaceDisplay);
-
-display.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    equals.click();
-  }
-});
-
-// Theme selector toggle
-let themeSelectorVisible = false;
 themeToggle.addEventListener('click', () => {
-  themeSelectorVisible = !themeSelectorVisible;
-  themeSelector.classList.toggle('active', themeSelectorVisible);
+  themeSelector.classList.toggle('visible');
 });
 
-themeBtns.forEach(btn => {
+themeButtons.forEach(btn => {
   btn.addEventListener('click', () => {
     const theme = btn.getAttribute('data-theme');
-    document.body.className = `theme-${theme}`;
+    document.body.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
-    document.body.classList.remove('custom-bg');
-    document.body.style.backgroundImage = '';
-    localStorage.removeItem('customBg');
+    themeSelector.classList.remove('visible');
   });
 });
 
-// Theme persistence
-window.addEventListener('DOMContentLoaded', () => {
-  const savedTheme = localStorage.getItem('theme') || 'spaceship';
-  document.body.className = `theme-${savedTheme}`;
-  // Restore custom background if set
-  const customBg = localStorage.getItem('customBg');
-  if (customBg) {
-    document.body.classList.add('custom-bg');
-    document.body.style.backgroundImage = `url('${customBg}')`;
+// Close theme selector when clicking outside
+document.addEventListener('click', (e) => {
+  if (!themeSelector.contains(e.target) && e.target !== themeToggle) {
+    themeSelector.classList.remove('visible');
+  }
+});
+
+// Calculator Logic
+const display = document.getElementById('display');
+const buttons = document.querySelectorAll('.btn');
+const clearBtn = document.getElementById('clear');
+const equalsBtn = document.getElementById('equals');
+const backspaceBtn = document.getElementById('backspace');
+
+let currentExpression = '';
+let lastResult = '';
+
+// Helper: Format number for display
+function formatNumber(num) {
+  if (typeof num === 'number') {
+    return num.toString().length > 10 ? num.toExponential(6) : num.toString();
+  }
+  return num;
+}
+
+// Helper: Safe evaluation using Decimal.js
+function safeEval(expr) {
+  try {
+    // Replace mathematical functions
+    expr = expr.replace(/sin\(/g, 'Math.sin(')
+              .replace(/cos\(/g, 'Math.cos(')
+              .replace(/tan\(/g, 'Math.tan(')
+              .replace(/sqrt\(/g, 'Math.sqrt(')
+              .replace(/log10\(/g, 'Math.log10(')
+              .replace(/log\(/g, 'Math.log(')
+              .replace(/\^/g, '**');
+
+    // Evaluate using Function constructor for better safety
+    const result = new Function('return ' + expr)();
+    return typeof result === 'number' && isFinite(result) ? result : 'Error';
+  } catch (error) {
+    console.error('Evaluation error:', error);
+    return 'Error';
+  }
+}
+
+// Update display
+function updateDisplay() {
+  display.value = currentExpression || '0';
+}
+
+// Handle number and operator input
+buttons.forEach(button => {
+  if (!button.id) {  // Skip special buttons (clear, equals, backspace)
+    button.addEventListener('click', () => {
+      const value = button.getAttribute('data-value');
+      if (value) {
+        if (lastResult && !isNaN(value[0])) {
+          // If starting new number after result, clear previous
+          currentExpression = value;
+          lastResult = '';
+        } else {
+          currentExpression += value;
+        }
+        updateDisplay();
+      }
+    });
+  }
+});
+
+// Clear button
+clearBtn.addEventListener('click', () => {
+  currentExpression = '';
+  lastResult = '';
+  updateDisplay();
+});
+
+// Backspace button
+backspaceBtn.addEventListener('click', () => {
+  currentExpression = currentExpression.slice(0, -1);
+  updateDisplay();
+});
+
+// Equals button
+equalsBtn.addEventListener('click', () => {
+  if (currentExpression) {
+    const result = safeEval(currentExpression);
+    currentExpression = formatNumber(result);
+    lastResult = currentExpression;
+    updateDisplay();
   }
 });
 
 // Background upload
+const bgUpload = document.getElementById('bg-upload');
+const bgReset = document.getElementById('bg-reset');
+
 bgUpload.addEventListener('change', e => {
   const file = e.target.files[0];
   if (!file) return;

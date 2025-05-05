@@ -5,96 +5,170 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Image Search</title>
   <style>
+    :root {
+      /* Default theme (Light) */
+      --bg-primary: #f0f2f5;
+      --bg-secondary: #ffffff;
+      --text-primary: #2c3e50;
+      --text-secondary: #34495e;
+      --accent-color: #3498db;
+      --button-bg: #e9ecef;
+      --button-hover: #dee2e6;
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --shadow-color: rgba(0, 0, 0, 0.1);
+    }
+
+    /* Dark Theme */
+    [data-theme="dark"] {
+      --bg-primary: #1a1a1a;
+      --bg-secondary: #2d2d2d;
+      --text-primary: #ffffff;
+      --text-secondary: #cccccc;
+      --accent-color: #3498db;
+      --button-bg: #404040;
+      --button-hover: #505050;
+      --card-bg: rgba(45, 45, 45, 0.9);
+      --shadow-color: rgba(0, 0, 0, 0.3);
+    }
+
+    /* Neon Theme */
+    [data-theme="neon"] {
+      --bg-primary: #0a192f;
+      --bg-secondary: #112240;
+      --text-primary: #64ffda;
+      --text-secondary: #8892b0;
+      --accent-color: #ff79c6;
+      --button-bg: #1a365d;
+      --button-hover: #2a4365;
+      --card-bg: rgba(17, 34, 64, 0.9);
+      --shadow-color: rgba(100, 255, 218, 0.1);
+    }
+
+    /* Retro Theme */
+    [data-theme="retro"] {
+      --bg-primary: #fdf6e3;
+      --bg-secondary: #eee8d5;
+      --text-primary: #657b83;
+      --text-secondary: #93a1a1;
+      --accent-color: #cb4b16;
+      --button-bg: #eee8d5;
+      --button-hover: #dcd4c1;
+      --card-bg: rgba(238, 232, 213, 0.9);
+      --shadow-color: rgba(101, 123, 131, 0.1);
+    }
+
+    /* Spaceship Theme */
+    [data-theme="spaceship"] {
+      --bg-primary: #1e1e2e;
+      --bg-secondary: #302d41;
+      --text-primary: #cba6f7;
+      --text-secondary: #988ba2;
+      --accent-color: #f5c2e7;
+      --button-bg: #45475a;
+      --button-hover: #585b70;
+      --card-bg: rgba(48, 45, 65, 0.9);
+      --shadow-color: rgba(203, 166, 247, 0.1);
+    }
+
     body {
       margin: 0;
       min-height: 100vh;
-      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      background: var(--bg-primary);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-      color: #fff;
+      color: var(--text-primary);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.3s;
     }
 
     .ai-container {
       max-width: 480px;
       margin: 60px auto;
-      background: rgba(30, 34, 40, 0.75);
+      background: var(--card-bg);
       border-radius: 20px;
-      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.25);
-      padding: 32px 24px 24px 24px;
+      box-shadow: 0 8px 32px var(--shadow-color);
+      padding: 32px 24px;
       text-align: center;
-      backdrop-filter: blur(12px) saturate(1.1);
+      backdrop-filter: blur(12px);
+      position: relative;
     }
 
     .ai-container h2 {
-      margin-bottom: 18px;
-      color: #7eb6ff;
+      margin-bottom: 24px;
+      color: var(--text-primary);
       letter-spacing: 1px;
+      font-size: 1.8rem;
     }
 
     .ai-upload-label {
       display: inline-block;
       padding: 12px 28px;
-      background: #2d6cdf;
-      color: #fff;
-      border-radius: 8px;
+      background: var(--accent-color);
+      color: var(--bg-secondary);
+      border-radius: 12px;
       cursor: pointer;
       font-size: 1.1rem;
       margin-bottom: 18px;
-      transition: background 0.2s;
+      transition: all 0.2s;
     }
 
     .ai-upload-label:hover {
-      background: #1b3e7a;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px var(--shadow-color);
     }
 
     #ai-image-preview {
-      max-width: 220px;
-      max-height: 220px;
-      margin: 18px auto;
-      border-radius: 12px;
-      box-shadow: 0 2px 12px #0002;
+      max-width: 280px;
+      max-height: 280px;
+      margin: 24px auto;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px var(--shadow-color);
       display: none;
+      object-fit: contain;
     }
 
     .ai-results {
-      margin-top: 24px;
-      display: flex;
-      flex-wrap: wrap;
+      margin-top: 32px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
       gap: 16px;
       justify-content: center;
     }
 
     .ai-result-img {
-      width: 120px;
-      height: 120px;
+      width: 100%;
+      aspect-ratio: 1;
       object-fit: cover;
-      border-radius: 10px;
-      box-shadow: 0 1px 6px #0002;
-      background: #fff;
-      transition: transform 0.2s;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px var(--shadow-color);
+      background: var(--bg-secondary);
+      transition: all 0.2s;
     }
 
     .ai-result-img:hover {
       transform: scale(1.05);
+      box-shadow: 0 4px 16px var(--shadow-color);
     }
 
     #ai-status {
-      margin: 12px 0;
-      color: #7eb6ff;
-      font-size: 0.9rem;
+      margin: 16px 0;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
     }
 
     #ai-loading {
       display: none;
-      margin: 12px 0;
+      margin: 16px 0;
     }
 
     .loading-spinner {
       display: inline-block;
-      width: 30px;
-      height: 30px;
-      border: 3px solid #7eb6ff33;
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--accent-color);
       border-radius: 50%;
-      border-top-color: #7eb6ff;
+      border-top-color: transparent;
       animation: spin 1s linear infinite;
     }
 
@@ -102,22 +176,121 @@
       to { transform: rotate(360deg); }
     }
 
+    .theme-selector {
+      position: fixed;
+      top: 20px;
+      right: -250px;
+      width: 200px;
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px var(--shadow-color);
+      transition: right 0.3s;
+      backdrop-filter: blur(12px);
+    }
+
+    .theme-selector.visible {
+      right: 20px;
+    }
+
+    .theme-selector h3 {
+      margin: 0 0 15px 0;
+      color: var(--text-primary);
+    }
+
+    .theme-btn {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      border: none;
+      border-radius: 8px;
+      background: var(--button-bg);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .theme-btn:hover {
+      background: var(--button-hover);
+      transform: translateX(5px);
+    }
+
+    #theme-toggle {
+      position: absolute;
+      top: -50px;
+      right: 0;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent-color);
+      color: var(--bg-secondary);
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
     .back-link {
       display: inline-block;
-      margin-top: 18px;
-      color: #7eb6ff;
+      margin-top: 24px;
+      color: var(--accent-color);
       text-decoration: none;
       font-weight: 500;
-      transition: color 0.2s;
+      transition: all 0.2s;
+      padding: 8px 16px;
+      border-radius: 8px;
+      background: var(--button-bg);
     }
 
     .back-link:hover {
-      color: #fff;
+      background: var(--button-hover);
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 480px) {
+      .ai-container {
+        margin: 20px;
+        padding: 20px 16px;
+      }
+
+      .ai-container h2 {
+        font-size: 1.5rem;
+      }
+
+      #ai-image-preview {
+        max-width: 220px;
+        max-height: 220px;
+      }
+
+      .ai-results {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .theme-selector {
+        top: auto;
+        bottom: -300px;
+        right: 50%;
+        transform: translateX(50%);
+        transition: bottom 0.3s;
+      }
+
+      .theme-selector.visible {
+        bottom: 80px;
+        right: 50%;
+      }
     }
   </style>
 </head>
 <body>
+  <div class="theme-selector">
+    <h3>Themes</h3>
+    <button class="theme-btn" data-theme="light">Light</button>
+    <button class="theme-btn" data-theme="dark">Dark</button>
+    <button class="theme-btn" data-theme="neon">Neon</button>
+    <button class="theme-btn" data-theme="retro">Retro</button>
+    <button class="theme-btn" data-theme="spaceship">Spaceship</button>
+  </div>
+
   <div class="ai-container">
+    <button id="theme-toggle" title="Show/hide themes">☰</button>
     <h2>AI Image Search</h2>
     <label class="ai-upload-label">
       Upload Image
@@ -140,5 +313,37 @@
   
   <!-- Load our enhanced image recognition script -->
   <script src="ai-image-search.js"></script>
+
+  <!-- Theme management script -->
+  <script>
+    // Theme management
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeSelector = document.querySelector('.theme-selector');
+    const themeButtons = document.querySelectorAll('.theme-btn');
+    
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.body.setAttribute('data-theme', savedTheme);
+    
+    themeToggle.addEventListener('click', () => {
+      themeSelector.classList.toggle('visible');
+    });
+    
+    themeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const theme = btn.getAttribute('data-theme');
+        document.body.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        themeSelector.classList.remove('visible');
+      });
+    });
+    
+    // Close theme selector when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!themeSelector.contains(e.target) && e.target !== themeToggle) {
+        themeSelector.classList.remove('visible');
+      }
+    });
+  </script>
 </body>
 </html> 
