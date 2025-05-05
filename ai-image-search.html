@@ -4,8 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Image Search</title>
-  <link rel="stylesheet" href="styles.css">
   <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      color: #fff;
+    }
+
     .ai-container {
       max-width: 480px;
       margin: 60px auto;
@@ -16,11 +23,13 @@
       text-align: center;
       backdrop-filter: blur(12px) saturate(1.1);
     }
+
     .ai-container h2 {
       margin-bottom: 18px;
       color: #7eb6ff;
       letter-spacing: 1px;
     }
+
     .ai-upload-label {
       display: inline-block;
       padding: 12px 28px;
@@ -32,17 +41,20 @@
       margin-bottom: 18px;
       transition: background 0.2s;
     }
+
     .ai-upload-label:hover {
       background: #1b3e7a;
     }
+
     #ai-image-preview {
       max-width: 220px;
       max-height: 220px;
-      margin: 18px auto 18px auto;
+      margin: 18px auto;
       border-radius: 12px;
       box-shadow: 0 2px 12px #0002;
       display: none;
     }
+
     .ai-results {
       margin-top: 24px;
       display: flex;
@@ -50,6 +62,7 @@
       gap: 16px;
       justify-content: center;
     }
+
     .ai-result-img {
       width: 120px;
       height: 120px;
@@ -57,35 +70,75 @@
       border-radius: 10px;
       box-shadow: 0 1px 6px #0002;
       background: #fff;
+      transition: transform 0.2s;
     }
+
+    .ai-result-img:hover {
+      transform: scale(1.05);
+    }
+
+    #ai-status {
+      margin: 12px 0;
+      color: #7eb6ff;
+      font-size: 0.9rem;
+    }
+
+    #ai-loading {
+      display: none;
+      margin: 12px 0;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      border: 3px solid #7eb6ff33;
+      border-radius: 50%;
+      border-top-color: #7eb6ff;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
     .back-link {
       display: inline-block;
       margin-top: 18px;
-      color: #2d6cdf;
+      color: #7eb6ff;
       text-decoration: none;
       font-weight: 500;
-      font-size: 1rem;
       transition: color 0.2s;
     }
+
     .back-link:hover {
-      color: #1db954;
+      color: #fff;
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.16.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
 </head>
 <body>
   <div class="ai-container">
-    <h2>AI Image Similarity Search</h2>
-    <label for="ai-upload" class="ai-upload-label">Upload an Image</label>
-    <input type="file" id="ai-upload" accept="image/*" style="display:none;">
-    <br>
-    <img id="ai-image-preview" alt="Preview" />
-    <div id="ai-loading" style="display:none;margin:18px 0;color:#7eb6ff;">Searching for similar images...</div>
-    <div class="ai-results" id="ai-results"></div>
-    <div id="ai-status" style="margin:12px 0;color:#1db954;font-weight:500;"></div>
+    <h2>AI Image Search</h2>
+    <label class="ai-upload-label">
+      Upload Image
+      <input type="file" id="ai-upload" accept="image/*" style="display:none;">
+    </label>
+    <div>
+      <img id="ai-image-preview" alt="Preview">
+      <div id="ai-status"></div>
+      <div id="ai-loading">
+        <div class="loading-spinner"></div>
+      </div>
+    </div>
+    <div id="ai-results" class="ai-results"></div>
     <a href="calculator with theme.html" class="back-link">← Back to Calculator</a>
   </div>
+
+  <!-- Load TensorFlow.js and MobileNet model -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.16.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+  
+  <!-- Load our enhanced image recognition script -->
   <script src="ai-image-search.js"></script>
 </body>
 </html> 
