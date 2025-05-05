@@ -190,7 +190,7 @@ async function fetchSimilarImages(searchTerms) {
         resultsDiv.innerHTML = '';
 
         // Use Unsplash API for demo purposes
-        const response = await fetch(`https://source.unsplash.com/featured/?${encodeURIComponent(searchTerms)}`);
+        const response = await fetch(`https://source.unsplash.com/featured/?${searchTerms.split(' ').join(',')}`);
 
         if (response.ok) {
             const imageUrl = response.url;
