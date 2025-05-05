@@ -146,6 +146,62 @@ bgReset.addEventListener('click', () => {
 const NEWS_API_KEY = '526bd458bee34ceaa8ff582756cc6155';
 const articleList = document.getElementById('article-list');
 
+// Fallback demo articles
+const demoArticles = [
+  {
+    title: "AI Revolutionizes Healthcare",
+    source: { name: "Demo News" },
+    publishedAt: new Date().toISOString(),
+    description: "Artificial Intelligence is transforming the healthcare industry with faster diagnostics and personalized treatments.",
+    url: "https://www.example.com/ai-healthcare"
+  },
+  {
+    title: "Breakthrough in Machine Learning",
+    source: { name: "Tech Today" },
+    publishedAt: new Date().toISOString(),
+    description: "Researchers announce a new machine learning algorithm that outperforms previous models.",
+    url: "https://www.example.com/ml-breakthrough"
+  },
+  {
+    title: "AI in Everyday Life",
+    source: { name: "AI World" },
+    publishedAt: new Date().toISOString(),
+    description: "From smart assistants to self-driving cars, AI is becoming part of our daily routines.",
+    url: "https://www.example.com/ai-everyday"
+  }
+];
+
+// Fallback demo videos
+const demoVideos = [
+  {
+    snippet: {
+      title: "What is Artificial Intelligence?",
+      channelTitle: "AI Explained",
+      publishedAt: new Date().toISOString(),
+      description: "A beginner's guide to understanding AI and its impact on society."
+    },
+    id: { videoId: "dQw4w9WgXcQ" }
+  },
+  {
+    snippet: {
+      title: "Top 5 AI Innovations in 2024",
+      channelTitle: "Tech Vision",
+      publishedAt: new Date().toISOString(),
+      description: "A look at the most exciting AI breakthroughs this year."
+    },
+    id: { videoId: "3tmd-ClpJxA" }
+  },
+  {
+    snippet: {
+      title: "How AI is Changing the World",
+      channelTitle: "Future Now",
+      publishedAt: new Date().toISOString(),
+      description: "Experts discuss the future of AI and its role in society."
+    },
+    id: { videoId: "V-_O7nl0Ii0" }
+  }
+];
+
 async function fetchTrendingArticles(category = 'all') {
   try {
     let url = `https://newsapi.org/v2/top-headlines?country=us&pageSize=6&apiKey=${NEWS_API_KEY}`;
@@ -154,24 +210,32 @@ async function fetchTrendingArticles(category = 'all') {
     }
     const response = await fetch(url);
     const data = await response.json();
-    if (data.articles && data.articles.length > 0) {
-      articleList.innerHTML = '';
-      data.articles.forEach(article => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <div class="card-title">${article.title}</div>
-          <div class="card-meta">${article.source.name} &middot; ${new Date(article.publishedAt).toLocaleDateString()}</div>
-          <div class="card-desc">${article.description ? article.description : ''}</div>
-          <a class="card-link" href="${article.url}" target="_blank">Read more</a>
-        `;
-        articleList.appendChild(card);
-      });
-    } else {
-      articleList.innerHTML = '<p>No trending articles found.</p>';
-    }
+    let articles = (data.articles && data.articles.length > 0) ? data.articles : demoArticles;
+    articleList.innerHTML = '';
+    articles.forEach(article => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-title">${article.title}</div>
+        <div class="card-meta">${article.source.name} &middot; ${new Date(article.publishedAt).toLocaleDateString()}</div>
+        <div class="card-desc">${article.description ? article.description : ''}</div>
+        <a class="card-link" href="${article.url}" target="_blank">Read more</a>
+      `;
+      articleList.appendChild(card);
+    });
   } catch (error) {
-    articleList.innerHTML = '<p>Error loading articles.</p>';
+    articleList.innerHTML = '';
+    demoArticles.forEach(article => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-title">${article.title}</div>
+        <div class="card-meta">${article.source.name} &middot; ${new Date(article.publishedAt).toLocaleDateString()}</div>
+        <div class="card-desc">${article.description ? article.description : ''}</div>
+        <a class="card-link" href="${article.url}" target="_blank">Read more</a>
+      `;
+      articleList.appendChild(card);
+    });
     console.error('Error fetching articles:', error);
   }
 }
@@ -209,24 +273,32 @@ async function fetchTrendingVideos(category = 'all') {
     if (category !== 'all') {
       videos = videos.filter(v => v.snippet.title.toLowerCase().includes(category) || v.snippet.description.toLowerCase().includes(category));
     }
-    if (videos.length > 0) {
-      videoList.innerHTML = '';
-      videos.forEach(video => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <div class="card-title">${video.snippet.title}</div>
-          <div class="card-meta">${video.snippet.channelTitle} &middot; ${new Date(video.snippet.publishedAt).toLocaleDateString()}</div>
-          <div class="card-desc">${video.snippet.description ? video.snippet.description.substring(0, 120) + '...' : ''}</div>
-          <a class="card-link" href="https://www.youtube.com/watch?v=${video.id.videoId}" target="_blank">Watch on YouTube</a>
-        `;
-        videoList.appendChild(card);
-      });
-    } else {
-      videoList.innerHTML = '<p>No trending videos found.</p>';
-    }
+    if (videos.length === 0) videos = demoVideos;
+    videoList.innerHTML = '';
+    videos.forEach(video => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-title">${video.snippet.title}</div>
+        <div class="card-meta">${video.snippet.channelTitle} &middot; ${new Date(video.snippet.publishedAt).toLocaleDateString()}</div>
+        <div class="card-desc">${video.snippet.description ? video.snippet.description.substring(0, 120) + '...' : ''}</div>
+        <a class="card-link" href="https://www.youtube.com/watch?v=${video.id.videoId}" target="_blank">Watch on YouTube</a>
+      `;
+      videoList.appendChild(card);
+    });
   } catch (error) {
-    videoList.innerHTML = '<p>Error loading videos.</p>';
+    videoList.innerHTML = '';
+    demoVideos.forEach(video => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-title">${video.snippet.title}</div>
+        <div class="card-meta">${video.snippet.channelTitle} &middot; ${new Date(video.snippet.publishedAt).toLocaleDateString()}</div>
+        <div class="card-desc">${video.snippet.description ? video.snippet.description.substring(0, 120) + '...' : ''}</div>
+        <a class="card-link" href="https://www.youtube.com/watch?v=${video.id.videoId}" target="_blank">Watch on YouTube</a>
+      `;
+      videoList.appendChild(card);
+    });
     console.error('Error fetching videos:', error);
   }
 }
