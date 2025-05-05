@@ -1,6 +1,5 @@
 // AI Image Search with Enhanced Recognition
 let model;
-let additionalModel;
 const imageUpload = document.getElementById('ai-upload');
 const imagePreview = document.getElementById('ai-image-preview');
 const resultsDiv = document.getElementById('ai-results');
@@ -63,8 +62,6 @@ async function initializeModels() {
         // Load MobileNet for general object recognition
         model = await mobilenet.load();
         
-        // Additional models could be loaded here for specialized recognition
-        
         statusDiv.textContent = 'AI models ready!';
         loadingDiv.style.display = 'none';
     } catch (error) {
@@ -81,7 +78,7 @@ async function analyzeImage(img) {
         statusDiv.textContent = 'Analyzing image...';
 
         // Get predictions from MobileNet with increased topk
-        const predictions = await model.classify(img, { topk: 20 }); // Increased from default
+        const predictions = await model.classify(img, { topk: 20 });
         
         // Enhanced analysis results
         const results = {
@@ -145,7 +142,6 @@ async function analyzeImage(img) {
 
 // Analyze lighting conditions in the image
 async function analyzeLighting(img) {
-    // Convert image to grayscale and analyze brightness distribution
     const imageData = await tf.browser.fromPixels(img)
         .mean(2)
         .toFloat();
@@ -153,7 +149,6 @@ async function analyzeLighting(img) {
     const brightness = await imageData.mean().data();
     const variance = await imageData.sub(brightness[0]).square().mean().data();
 
-    // Determine lighting characteristics
     const results = [];
     if (brightness[0] > 200) {
         results.push({ label: 'bright lighting', confidence: 0.9 });
@@ -180,17 +175,15 @@ function generateSearchTerms(results) {
             .map(p => p.label));
     }
     // Limit to top 5 terms overall
-    return allTerms.slice(0, 5).join(' ');
+    return allTerms.slice(0, 5).join(',');
 }
 
 // Fetch similar images using the generated search terms
 async function fetchSimilarImages(searchTerms) {
     try {
-        // Clear previous results
         resultsDiv.innerHTML = '';
 
-        // Use Unsplash API for demo purposes
-        const response = await fetch(`https://source.unsplash.com/featured/?${searchTerms.split(' ').join(',')}`);
+        const response = await fetch(`https://source.unsplash.com/featured/?${searchTerms}`);
 
         if (response.ok) {
             const imageUrl = response.url;
@@ -233,7 +226,6 @@ function displayDetailedResults(results) {
         }
     }
     
-    // Add details before the results
     resultsDiv.insertBefore(detailsDiv, resultsDiv.firstChild);
 }
 
@@ -242,7 +234,6 @@ imageUpload.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Display preview
     const reader = new FileReader();
     reader.onload = (e) => {
         imagePreview.src = e.target.result;
@@ -250,9 +241,8 @@ imageUpload.addEventListener('change', async (e) => {
     };
     reader.readAsDataURL(file);
 
-    // Wait for image to load before analysis
     imagePreview.onload = () => analyzeImage(imagePreview);
 });
 
 // Initialize on page load
-window.addEventListener('load', initializeModels); 
+window.addEventListener('load', initializeModels);
