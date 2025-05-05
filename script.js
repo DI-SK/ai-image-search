@@ -7,25 +7,30 @@ const themeButtons = document.querySelectorAll('.theme-btn');
 const savedTheme = localStorage.getItem('theme') || 'light';
 document.body.setAttribute('data-theme', savedTheme);
 
-themeToggle.addEventListener('click', () => {
-  themeSelector.classList.toggle('visible');
-});
-
-themeButtons.forEach(btn => {
-  btn.addEventListener('click', () => {
-    const theme = btn.getAttribute('data-theme');
-    document.body.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-    themeSelector.classList.remove('visible');
+if (themeToggle && themeSelector) {
+  themeToggle.addEventListener('click', () => {
+    themeSelector.classList.toggle('visible');
   });
-});
+}
 
-// Close theme selector when clicking outside
-document.addEventListener('click', (e) => {
-  if (!themeSelector.contains(e.target) && e.target !== themeToggle) {
-    themeSelector.classList.remove('visible');
-  }
-});
+if (themeButtons && themeButtons.length > 0) {
+  themeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const theme = btn.getAttribute('data-theme');
+      document.body.setAttribute('data-theme', theme);
+      localStorage.setItem('theme', theme);
+      themeSelector.classList.remove('visible');
+    });
+  });
+}
+
+if (themeSelector && themeToggle) {
+  document.addEventListener('click', (e) => {
+    if (!themeSelector.contains(e.target) && e.target !== themeToggle) {
+      themeSelector.classList.remove('visible');
+    }
+  });
+}
 
 // Calculator Logic
 const display = document.getElementById('display');
@@ -68,77 +73,89 @@ function safeEval(expr) {
 
 // Update display
 function updateDisplay() {
-  display.value = currentExpression || '0';
+  if (display) display.value = currentExpression || '0';
 }
 
 // Handle number and operator input
-buttons.forEach(button => {
-  if (!button.id) {  // Skip special buttons (clear, equals, backspace)
-    button.addEventListener('click', () => {
-      const value = button.getAttribute('data-value');
-      if (value) {
-        if (lastResult && !isNaN(value[0])) {
-          // If starting new number after result, clear previous
-          currentExpression = value;
-          lastResult = '';
-        } else {
-          currentExpression += value;
+if (buttons && buttons.length > 0) {
+  buttons.forEach(button => {
+    if (!button.id) {  // Skip special buttons (clear, equals, backspace)
+      button.addEventListener('click', () => {
+        const value = button.getAttribute('data-value');
+        if (value) {
+          if (lastResult && !isNaN(value[0])) {
+            // If starting new number after result, clear previous
+            currentExpression = value;
+            lastResult = '';
+          } else {
+            currentExpression += value;
+          }
+          updateDisplay();
         }
-        updateDisplay();
-      }
-    });
-  }
-});
+      });
+    }
+  });
+}
 
-// Clear button
-clearBtn.addEventListener('click', () => {
-  currentExpression = '';
-  lastResult = '';
-  updateDisplay();
-});
-
-// Backspace button
-backspaceBtn.addEventListener('click', () => {
-  currentExpression = currentExpression.slice(0, -1);
-  updateDisplay();
-});
-
-// Equals button
-equalsBtn.addEventListener('click', () => {
-  if (currentExpression) {
-    const result = safeEval(currentExpression);
-    currentExpression = formatNumber(result);
-    lastResult = currentExpression;
+if (clearBtn) {
+  clearBtn.addEventListener('click', () => {
+    currentExpression = '';
+    lastResult = '';
     updateDisplay();
-  }
-});
+  });
+}
+
+if (backspaceBtn) {
+  backspaceBtn.addEventListener('click', () => {
+    currentExpression = currentExpression.slice(0, -1);
+    updateDisplay();
+  });
+}
+
+if (equalsBtn) {
+  equalsBtn.addEventListener('click', () => {
+    if (currentExpression) {
+      const result = safeEval(currentExpression);
+      currentExpression = formatNumber(result);
+      lastResult = currentExpression;
+      updateDisplay();
+    }
+  });
+}
 
 // Background upload
 const bgUpload = document.getElementById('bg-upload');
 const bgReset = document.getElementById('bg-reset');
 
-bgUpload.addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    const url = ev.target.result;
-    document.body.classList.add('custom-bg');
-    document.body.style.backgroundImage = `url('${url}')`;
-    localStorage.setItem('customBg', url);
-  };
-  reader.readAsDataURL(file);
-});
+if (bgUpload) {
+  bgUpload.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      const url = ev.target.result;
+      document.body.classList.add('custom-bg');
+      document.body.style.backgroundImage = `url('${url}')`;
+      localStorage.setItem('customBg', url);
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
-document.querySelector('label[for="bg-upload"]').addEventListener('click', () => {
-  bgUpload.click();
-});
+const bgUploadLabel = document.querySelector('label[for="bg-upload"]');
+if (bgUploadLabel && bgUpload) {
+  bgUploadLabel.addEventListener('click', () => {
+    bgUpload.click();
+  });
+}
 
-bgReset.addEventListener('click', () => {
-  document.body.classList.remove('custom-bg');
-  document.body.style.backgroundImage = '';
-  localStorage.removeItem('customBg');
-});
+if (bgReset) {
+  bgReset.addEventListener('click', () => {
+    document.body.classList.remove('custom-bg');
+    document.body.style.backgroundImage = '';
+    localStorage.removeItem('customBg');
+  });
+}
 
 // script.js for Trending Now homepage
 // Fetch and display trending articles from NewsAPI
