@@ -177,22 +177,24 @@ function generateSearchTerms(results) {
     return [...new Set(allTerms)].slice(0, 5).join(',');
 }
 
-// Fetch similar images using the generated search terms
+// Fetch similar images using the generated search terms (Pixabay)
 async function fetchSimilarImages(searchTerms) {
     try {
-        // Clear previous results
         resultsDiv.innerHTML = '';
-        
-        // Use Unsplash API for demo purposes
-        // In production, replace with your preferred image API
-        const response = await fetch(`https://source.unsplash.com/featured/?${encodeURIComponent(searchTerms)}`);
-        
-        if (response.ok) {
-            const imageUrl = response.url;
+        const apiKey = '50094662-d568135692c916b3b343edefa';
+        const query = encodeURIComponent(searchTerms.replace(/,/g, '+'));
+        const url = `https://pixabay.com/api/?key=${apiKey}&q=${query}&image_type=photo&per_page=1`;
+        console.log('Pixabay API URL:', url);
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data.hits && data.hits.length > 0) {
+            const imageUrl = data.hits[0].webformatURL;
             const img = document.createElement('img');
             img.src = imageUrl;
             img.className = 'ai-result-img';
             resultsDiv.appendChild(img);
+        } else {
+            statusDiv.textContent += '\nNo similar images found on Pixabay.';
         }
     } catch (error) {
         console.error('Error fetching similar images:', error);
