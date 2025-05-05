@@ -1,3 +1,9 @@
+// Global error handler and script load log
+window.onerror = function(message, source, lineno, colno, error) {
+    console.log('Global JS Error:', message, 'at', source, lineno + ':' + colno, error);
+};
+console.log('ai-image-search.js loaded');
+
 // AI Image Search with Enhanced Recognition
 let model;
 let additionalModel;
@@ -238,24 +244,27 @@ function displayDetailedResults(results) {
 
 // Handle image upload
 if (imageUpload && imagePreview) {
+    console.log('Upload and preview elements found');
     imageUpload.addEventListener('change', async (e) => {
         const file = e.target.files[0];
-        console.log('File selected:', file); // Debug log
+        console.log('File selected:', file);
         if (!file) return;
 
         const reader = new FileReader();
         reader.onload = (e) => {
-            console.log('FileReader loaded:', e.target.result); // Debug log
+            console.log('FileReader loaded:', e.target.result);
             imagePreview.src = e.target.result;
             imagePreview.style.display = 'block';
         };
         reader.readAsDataURL(file);
 
         imagePreview.onload = () => {
-            console.log('Image loaded in preview'); // Debug log
+            console.log('Image loaded in preview');
             analyzeImage(imagePreview);
         };
     });
+} else {
+    console.log('Upload or preview element not found');
 }
 
 // Initialize on page load
