@@ -69,6 +69,9 @@ async function initializeModels() {
         // Load MobileNet for general object recognition
         model = await mobilenet.load();
         
+        // Load face-api.js TinyFaceDetector model
+        await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/face-api.js/weights');
+        
         // Additional models could be loaded here for specialized recognition
         
         statusDiv.textContent = 'AI models ready!';
@@ -102,6 +105,13 @@ async function analyzeImage(img) {
             clothing: [],
             scene: []
         };
+
+        // Face detection with face-api.js
+        const detections = await faceapi.detectAllFaces(img, new faceapi.TinyFaceDetectorOptions());
+        console.log('face-api.js detections:', detections);
+        if (detections.length > 0) {
+            results.actors.push({ label: 'person', confidence: 0.99 });
+        }
 
         // Process predictions with lower threshold for better detection
         predictions.forEach(pred => {
