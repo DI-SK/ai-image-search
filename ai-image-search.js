@@ -188,17 +188,18 @@ async function fetchSimilarImages(searchTerms) {
     try {
         // Clear previous results
         resultsDiv.innerHTML = '';
-        
+
         // Use Unsplash API for demo purposes
-        // In production, replace with your preferred image API
         const response = await fetch(`https://source.unsplash.com/featured/?${encodeURIComponent(searchTerms)}`);
-        
+
         if (response.ok) {
             const imageUrl = response.url;
             const img = document.createElement('img');
             img.src = imageUrl;
             img.className = 'ai-result-img';
             resultsDiv.appendChild(img);
+        } else {
+            statusDiv.textContent = 'No similar images found.';
         }
     } catch (error) {
         console.error('Error fetching similar images:', error);
