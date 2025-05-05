@@ -70,22 +70,6 @@
       --shadow-color: rgba(203, 166, 247, 0.1);
     }
 
-    /* Steampunk Theme */
-    [data-theme="steampunk"] {
-      --bg-primary: #4b3d3d; /* Dark brown */
-      --bg-secondary: #c2b280; /* Light brown */
-      --text-primary: #f0e68c; /* Light yellow */
-      --text-secondary: #d1b000; /* Gold */
-      --accent-color: #8b4513; /* Saddle brown */
-      --button-bg: #7f5c3e; /* Darker brown */
-      --button-hover: #9b7b5e; /* Lighter brown */
-      --operator-bg: #8b5a2b; /* Brown */
-      --operator-color: #ffffff; /* White */
-      --equal-bg: #c2b280; /* Light brown */
-      --equal-hover: #d1b000; /* Gold */
-      --shadow-color: rgba(0, 0, 0, 0.3);
-    }
-
     body {
       margin: 0;
       min-height: 100vh;
@@ -358,7 +342,6 @@
     <button class="theme-btn" data-theme="neon">Neon</button>
     <button class="theme-btn" data-theme="retro">Retro</button>
     <button class="theme-btn" data-theme="spaceship">Spaceship</button>
-    <button class="theme-btn" data-theme="steampunk">Steampunk</button>
   </div>
 
   <div class="ai-container">
@@ -366,14 +349,12 @@
     <h2>AI Image Search</h2>
     <label class="ai-upload-label">
       Upload Image
-      <input type="file" id="ai-upload" accept="image/*" style="display:none;">
+      <input type="file" id="ai-upload" accept="image/*">
     </label>
     <div>
-      <img id="ai-image-preview" alt="Preview">
+      <img id="ai-image-preview" style="display:none; max-width:100%; margin-top:16px;">
       <div id="ai-status"></div>
-      <div id="ai-loading">
-        <div class="loading-spinner"></div>
-      </div>
+      <div id="ai-loading" style="display:none;">Loading...</div>
     </div>
     <div id="ai-results" class="ai-results"></div>
     <a href="calculator with theme.html" class="back-link">← Back to Calculator</a>
@@ -418,4 +399,4 @@
     });
   </script>
 </body>
-</html>
+</html> 
