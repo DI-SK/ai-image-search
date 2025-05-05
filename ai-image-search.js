@@ -90,74 +90,51 @@ async function analyzeImage(img) {
         statusDiv.textContent = 'Analyzing image...';
 
         // Get predictions from MobileNet with increased topk
-        const predictions = await model.classify(img, { topk: 20 }); // Increased from default
+        const predictions = await model.classify(img, { topk: 10 });
         console.log('MobileNet predictions:', predictions); // Debug log
-        
-        // Enhanced analysis results
-        const results = {
-            actors: [],
-            characters: [],
-            logos: [],
-            lighting: [],
-            general: [],
-            colors: [],
-            styles: [],
-            clothing: [],
-            scene: []
-        };
 
-        // Face detection with face-api.js
-        const detections = await faceapi.detectAllFaces(img, new faceapi.TinyFaceDetectorOptions());
-        console.log('face-api.js detections:', detections);
-        if (detections.length > 0) {
-            results.actors.push({ label: 'person', confidence: 0.99 });
-        }
+        // Use only the top 5 MobileNet predictions for search terms
+        const searchTerms = predictions
+            .sort((a, b) => b.probability - a.probability)
+            .slice(0, 5)
+            .map(p => p.className.split(',')[0].replace(/\s+/g, '-'))
+            .join(',');
 
-        // Process predictions with lower threshold for better detection
-        predictions.forEach(pred => {
-            const className = pred.className.toLowerCase();
-            const probability = pred.probability;
+        // Show search terms in the UI
+        statusDiv.textContent = 'Search terms: ' + searchTerms;
 
-            // Lower threshold for character and actor detection
-            const threshold = 
-                className.includes('person') || 
-                className.includes('character') || 
-                className.includes('hero') ? 0.05 : 0.1;
-
-            if (probability > threshold) {
-                // Check each category for matches
-                for (const [category, keywords] of Object.entries(categories)) {
-                    if (keywords.some(keyword => className.includes(keyword))) {
-                        results[category].push({
-                            label: className,
-                            confidence: probability
-                        });
-                    }
-                }
-            }
-        });
-
-        // Analyze lighting conditions
-        const lightingAnalysis = await analyzeLighting(img);
-        results.lighting = results.lighting.concat(lightingAnalysis);
-
-        // Generate search terms based on results
-        const searchTerms = generateSearchTerms(results);
-        
         // Fetch similar images
         await fetchSimilarImages(searchTerms);
 
-        statusDiv.textContent = 'Analysis complete!';
+        statusDiv.textContent += '\nAnalysis complete!';
         loadingDiv.style.display = 'none';
 
-        // Display detailed results
-        displayDetailedResults(results);
+        // Optionally, display detailed results (MobileNet predictions)
+        displayMobileNetResults(predictions);
 
     } catch (error) {
         console.error('Error analyzing image:', error);
         statusDiv.textContent = 'Error analyzing image. Please try again.';
         loadingDiv.style.display = 'none';
     }
+}
+
+// Display MobileNet predictions
+function displayMobileNetResults(predictions) {
+    const detailsDiv = document.createElement('div');
+    detailsDiv.className = 'analysis-details';
+    const title = document.createElement('h3');
+    title.textContent = 'MobileNet Predictions';
+    detailsDiv.appendChild(title);
+    const list = document.createElement('ul');
+    predictions.forEach(pred => {
+        const item = document.createElement('li');
+        item.textContent = `${pred.className} (${Math.round(pred.probability * 100)}%)`;
+        list.appendChild(item);
+    });
+    detailsDiv.appendChild(list);
+    resultsDiv.innerHTML = '';
+    resultsDiv.appendChild(detailsDiv);
 }
 
 // Analyze lighting conditions in the image
