@@ -183,17 +183,23 @@ async function fetchSimilarImages(searchTerms) {
     try {
         resultsDiv.innerHTML = '';
 
-        // Construct URL properly, replacing spaces with '+' and ensuring no trailing invalid characters
+        // Construct URL and log it
         const formattedTerms = searchTerms.replace(/\s/g, '+').replace(/,+$/, '');
-        const response = await fetch(`https://source.unsplash.com/featured/?${formattedTerms}`);
+        const fetchUrl = `https://source.unsplash.com/featured/?${formattedTerms}`;
+        console.log("Fetching URL:", fetchUrl); // Debugging line
+
+        const response = await fetch(fetchUrl);
 
         if (response.ok) {
             const imageUrl = response.url;
+            console.log("Image URL fetched:", imageUrl); // Debugging line
+
             const img = document.createElement('img');
             img.src = imageUrl;
             img.className = 'ai-result-img';
             resultsDiv.appendChild(img);
         } else {
+            console.error("No similar images found. Status:", response.status);
             statusDiv.textContent = 'No similar images found.';
         }
     } catch (error) {
@@ -201,7 +207,6 @@ async function fetchSimilarImages(searchTerms) {
         statusDiv.textContent = 'Error fetching similar images. Please try again.';
     }
 }
-
 // Display detailed analysis results
 function displayDetailedResults(results) {
     const detailsDiv = document.createElement('div');
