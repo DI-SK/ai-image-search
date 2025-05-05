@@ -138,4 +138,9 @@ bgReset.addEventListener('click', () => {
   document.body.classList.remove('custom-bg');
   document.body.style.backgroundImage = '';
   localStorage.removeItem('customBg');
-}); 
+});
+
+// script.js for Trending Now homepage
+// Placeholder for future dynamic content
+
+// Example: You can fetch articles/videos/news here in the next steps 
