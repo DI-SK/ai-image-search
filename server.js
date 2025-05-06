@@ -17,19 +17,16 @@ if (!fs.existsSync(dataDir)) {
 app.use(cors());
 app.use(express.json());
 
-// Serve static files from both build directory and root
+// Serve static files from the React app
 const buildPath = path.join(__dirname, 'build');
-const indexPath = path.join(buildPath, 'index.html');
-
 console.log('Build path:', buildPath);
-console.log('Index path:', indexPath);
 
 if (fs.existsSync(buildPath)) {
-  console.log('Build directory exists');
+  console.log('Build directory exists, serving static files');
   app.use(express.static(buildPath));
 } else {
-  console.log('Build directory not found, serving from root');
-  app.use(express.static(__dirname));
+  console.log('Build directory not found, serving development files');
+  app.use(express.static(path.join(__dirname, 'public')));
 }
 
 // Cache files
@@ -127,10 +124,11 @@ app.get('/api/videos', async (req, res) => {
 
 // Serve React app for all other routes
 app.get('*', (req, res) => {
+  const indexPath = path.join(buildPath, 'index.html');
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
   }
 });
 

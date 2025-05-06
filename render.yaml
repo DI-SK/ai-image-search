@@ -7,7 +7,6 @@ services:
       rm -rf build
       npm install
       CI=false npm run build
-      ls -la
     startCommand: node server.js
     envVars:
       - key: NODE_ENV
@@ -17,6 +16,5 @@ services:
       - key: YT_API_KEY
         sync: false
     nodeVersion: 18.x
-    staticPublishPath: ./
-    healthCheckPath: /
+    healthCheckPath: /api/news
     autoDeploy: true 
