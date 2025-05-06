@@ -26,7 +26,29 @@ if (fs.existsSync(buildPath)) {
   app.use(express.static(buildPath));
 } else {
   console.log('Build directory not found, serving development files');
-  app.use(express.static(path.join(__dirname, 'public')));
+  // Create a basic index.html if it doesn't exist
+  const publicPath = path.join(__dirname, 'public');
+  if (!fs.existsSync(publicPath)) {
+    fs.mkdirSync(publicPath, { recursive: true });
+  }
+  const indexPath = path.join(publicPath, 'index.html');
+  if (!fs.existsSync(indexPath)) {
+    fs.writeFileSync(indexPath, `
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>AI Trending Now</title>
+        </head>
+        <body>
+          <h1>AI Trending Now</h1>
+          <p>Loading...</p>
+        </body>
+      </html>
+    `);
+  }
+  app.use(express.static(publicPath));
 }
 
 // Cache files
