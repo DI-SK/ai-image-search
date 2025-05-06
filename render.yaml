@@ -6,7 +6,8 @@ services:
       rm -rf node_modules
       rm -rf build
       npm install
-      CI=false npm run build
+      npm run build
+      echo "Build directory contents:"
       ls -la build/
     startCommand: node server.js
     envVars:
