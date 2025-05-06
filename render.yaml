@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: ai-trending-now
+    env: node
+    buildCommand: |
+      rm -rf node_modules
+      rm -rf build
+      npm install
+      npm run build
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GNEWS_API_KEY
+        sync: false
+      - key: YT_API_KEY
+        sync: false
+    nodeVersion: 18.x
+    healthCheckPath: /
+    autoDeploy: true 
