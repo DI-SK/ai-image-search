@@ -17,8 +17,20 @@ if (!fs.existsSync(dataDir)) {
 app.use(cors());
 app.use(express.json());
 
-// Serve static files from the React app
-app.use(express.static(path.join(__dirname, 'build')));
+// Serve static files from both build directory and root
+const buildPath = path.join(__dirname, 'build');
+const indexPath = path.join(buildPath, 'index.html');
+
+console.log('Build path:', buildPath);
+console.log('Index path:', indexPath);
+
+if (fs.existsSync(buildPath)) {
+  console.log('Build directory exists');
+  app.use(express.static(buildPath));
+} else {
+  console.log('Build directory not found, serving from root');
+  app.use(express.static(__dirname));
+}
 
 // Cache files
 const NEWS_CACHE_FILE = path.join(dataDir, 'news_cache.json');
@@ -115,13 +127,17 @@ app.get('/api/videos', async (req, res) => {
 
 // Serve React app for all other routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.sendFile(path.join(__dirname, 'index.html'));
+  }
 });
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log('Environment:', process.env.NODE_ENV);
-  console.log('Build directory:', path.join(__dirname, 'build'));
+  console.log('Build directory:', buildPath);
   console.log('API Keys configured:', {
     gnews: !!process.env.GNEWS_API_KEY,
     youtube: !!process.env.YT_API_KEY
