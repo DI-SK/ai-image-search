@@ -16,7 +16,9 @@ if (!fs.existsSync(dataDir)) {
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static('.'));
+
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, 'build')));
 
 // Cache files
 const NEWS_CACHE_FILE = path.join(dataDir, 'news_cache.json');
@@ -111,7 +113,7 @@ app.get('/api/videos', async (req, res) => {
   }
 });
 
-// Serve React app
+// Serve React app for all other routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
@@ -119,6 +121,7 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log('Environment:', process.env.NODE_ENV);
+  console.log('Build directory:', path.join(__dirname, 'build'));
   console.log('API Keys configured:', {
     gnews: !!process.env.GNEWS_API_KEY,
     youtube: !!process.env.YT_API_KEY

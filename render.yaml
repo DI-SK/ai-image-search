@@ -6,7 +6,7 @@ services:
       rm -rf node_modules
       rm -rf build
       npm install
-      npm run build
+      CI=false npm run build
     startCommand: node server.js
     envVars:
       - key: NODE_ENV
@@ -16,5 +16,6 @@ services:
       - key: YT_API_KEY
         sync: false
     nodeVersion: 18.x
+    staticPublishPath: ./build
     healthCheckPath: /
     autoDeploy: true 
