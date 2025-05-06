@@ -17,8 +17,6 @@ services:
         sync: false
       - key: YT_API_KEY
         sync: false
-      - key: SEMANTIC_SCHOLAR_API_KEY
-        sync: false
       - key: OPENAI_API_KEY
         sync: false
     nodeVersion: 18.x

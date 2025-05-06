@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const fetch = require('node-fetch');
+const xml2js = require('xml2js');
 require('dotenv').config();
 
 const app = express();
@@ -156,31 +157,38 @@ app.get('/api/videos', async (req, res) => {
 
 // Research Papers API endpoint
 app.get('/api/papers', async (req, res) => {
-  if (!process.env.SEMANTIC_SCHOLAR_API_KEY) {
-    return res.status(500).json({ error: 'Semantic Scholar API key not configured' });
-  }
-
   try {
-    const url = 'https://api.semanticscholar.org/graph/v1/paper/search?query=artificial+intelligence&limit=10&fields=title,abstract,url,year,authors,venue';
-    const response = await fetch(url, {
-      headers: {
-        'x-api-key': process.env.SEMANTIC_SCHOLAR_API_KEY
-      }
-    });
+    const url = 'http://export.arxiv.org/api/query?search_query=cat:cs.AI&sortBy=lastUpdatedDate&sortOrder=descending&max_results=10';
+    const response = await fetch(url);
     
     if (!response.ok) {
-      throw new Error(`Semantic Scholar API responded with status: ${response.status}`);
+      throw new Error(`arXiv API responded with status: ${response.status}`);
     }
     
-    const data = await response.json();
-    let papers = (data.data && data.data.length > 0) ? data.data : [];
+    const data = await response.text();
+    const parser = new xml2js.Parser();
     
-    if (papers.length > 0) {
-      cachedPapers = papers;
-      fs.writeFileSync(PAPERS_CACHE_FILE, JSON.stringify(cachedPapers));
-    }
-    
-    res.json({ papers });
+    parser.parseString(data, (err, result) => {
+      if (err) {
+        throw new Error('Failed to parse arXiv XML response');
+      }
+      
+      const entries = result.feed.entry || [];
+      const papers = entries.map(entry => ({
+        title: entry.title[0],
+        abstract: entry.summary[0],
+        url: entry.id[0],
+        published: entry.published[0],
+        authors: entry.author.map(author => author.name[0])
+      }));
+      
+      if (papers.length > 0) {
+        cachedPapers = papers;
+        fs.writeFileSync(PAPERS_CACHE_FILE, JSON.stringify(cachedPapers));
+      }
+      
+      res.json({ papers });
+    });
   } catch (error) {
     console.error('Papers API error:', error.message);
     if (cachedPapers.length > 0) {
@@ -257,7 +265,6 @@ app.listen(PORT, () => {
   console.log('API Keys configured:', {
     gnews: !!process.env.GNEWS_API_KEY,
     youtube: !!process.env.YT_API_KEY,
-    semanticScholar: !!process.env.SEMANTIC_SCHOLAR_API_KEY,
     openai: !!process.env.OPENAI_API_KEY
   });
 }); 
