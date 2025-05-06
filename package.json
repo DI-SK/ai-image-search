@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "build": "CI=false react-scripts build",
+    "build": "CI=false react-scripts build && cp -r build/* .",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "heroku-postbuild": "npm run build"
