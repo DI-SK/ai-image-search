@@ -54,10 +54,12 @@ if (fs.existsSync(buildPath)) {
 // Cache files
 const NEWS_CACHE_FILE = path.join(dataDir, 'news_cache.json');
 const VIDEOS_CACHE_FILE = path.join(dataDir, 'video_cache.json');
+const PAPERS_CACHE_FILE = path.join(dataDir, 'papers_cache.json');
 
 // Load cache from disk on startup
 let cachedNews = [];
 let cachedVideos = [];
+let cachedPapers = [];
 try {
   if (fs.existsSync(NEWS_CACHE_FILE)) {
     cachedNews = JSON.parse(fs.readFileSync(NEWS_CACHE_FILE, 'utf8'));
@@ -73,6 +75,14 @@ try {
 } catch (e) { 
   console.warn('Could not load videos cache:', e.message);
   cachedVideos = []; 
+}
+try {
+  if (fs.existsSync(PAPERS_CACHE_FILE)) {
+    cachedPapers = JSON.parse(fs.readFileSync(PAPERS_CACHE_FILE, 'utf8'));
+  }
+} catch (e) { 
+  console.warn('Could not load papers cache:', e.message);
+  cachedPapers = []; 
 }
 
 // News API endpoint
@@ -144,6 +154,92 @@ app.get('/api/videos', async (req, res) => {
   }
 });
 
+// Research Papers API endpoint
+app.get('/api/papers', async (req, res) => {
+  if (!process.env.SEMANTIC_SCHOLAR_API_KEY) {
+    return res.status(500).json({ error: 'Semantic Scholar API key not configured' });
+  }
+
+  try {
+    const url = 'https://api.semanticscholar.org/graph/v1/paper/search?query=artificial+intelligence&limit=10&fields=title,abstract,url,year,authors,venue';
+    const response = await fetch(url, {
+      headers: {
+        'x-api-key': process.env.SEMANTIC_SCHOLAR_API_KEY
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Semantic Scholar API responded with status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    let papers = (data.data && data.data.length > 0) ? data.data : [];
+    
+    if (papers.length > 0) {
+      cachedPapers = papers;
+      fs.writeFileSync(PAPERS_CACHE_FILE, JSON.stringify(cachedPapers));
+    }
+    
+    res.json({ papers });
+  } catch (error) {
+    console.error('Papers API error:', error.message);
+    if (cachedPapers.length > 0) {
+      res.json({ papers: cachedPapers });
+    } else {
+      res.status(500).json({ error: 'Failed to fetch papers and no cached data available' });
+    }
+  }
+});
+
+// Summary API endpoint
+app.post('/api/summarize', async (req, res) => {
+  if (!process.env.OPENAI_API_KEY) {
+    return res.status(500).json({ error: 'OpenAI API key not configured' });
+  }
+
+  const { content, type } = req.body;
+  if (!content || !type) {
+    return res.status(400).json({ error: 'Content and type are required' });
+  }
+
+  try {
+    const prompt = `Summarize this ${type} in a concise way:\n\n${content}`;
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a helpful assistant that summarizes content concisely.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 150,
+        temperature: 0.7
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API responded with status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const summary = data.choices[0].message.content.trim();
+    res.json({ summary });
+  } catch (error) {
+    console.error('Summary generation error:', error.message);
+    res.status(500).json({ error: 'Failed to generate summary' });
+  }
+});
+
 // Serve React app for all other routes
 app.get('*', (req, res) => {
   const indexPath = path.join(buildPath, 'index.html');
@@ -160,6 +256,8 @@ app.listen(PORT, () => {
   console.log('Build directory:', buildPath);
   console.log('API Keys configured:', {
     gnews: !!process.env.GNEWS_API_KEY,
-    youtube: !!process.env.YT_API_KEY
+    youtube: !!process.env.YT_API_KEY,
+    semanticScholar: !!process.env.SEMANTIC_SCHOLAR_API_KEY,
+    openai: !!process.env.OPENAI_API_KEY
   });
 }); 
