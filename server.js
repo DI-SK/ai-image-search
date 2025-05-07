@@ -399,47 +399,52 @@ try {
   summaryCache = {};
 }
 
-// Add rate limiting for OpenAI
-const openAIRateLimit = {
-  requestsPerMinute: 10,
-  requests: [],
-  lastReset: new Date()
-};
+// Simple text summarization function
+function generateSummary(text, type) {
+  // Split text into sentences
+  const sentences = text.match(/[^.!?]+[.!?]+/g) || [];
+  
+  // Create word frequency map
+  const wordFreq = {};
+  const words = text.toLowerCase().match(/\b\w+\b/g) || [];
+  words.forEach(word => {
+    wordFreq[word] = (wordFreq[word] || 0) + 1;
+  });
 
-function checkOpenAIRateLimit() {
-  const now = new Date();
+  // Score sentences based on word frequency
+  const sentenceScores = sentences.map(sentence => {
+    const sentenceWords = sentence.toLowerCase().match(/\b\w+\b/g) || [];
+    const score = sentenceWords.reduce((sum, word) => sum + (wordFreq[word] || 0), 0);
+    return { sentence, score };
+  });
+
+  // Sort sentences by score and take top 3
+  const topSentences = sentenceScores
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map(item => item.sentence.trim());
+
+  // Join sentences and add context based on type
+  let summary = topSentences.join(' ');
   
-  // Reset if it's a new minute
-  if (now.getMinutes() !== openAIRateLimit.lastReset.getMinutes()) {
-    openAIRateLimit.requests = [];
-    openAIRateLimit.lastReset = now;
+  // Add type-specific context
+  switch(type) {
+    case 'news':
+      summary = `News Summary: ${summary}`;
+      break;
+    case 'paper':
+      summary = `Research Summary: ${summary}`;
+      break;
+    case 'video':
+      summary = `Video Summary: ${summary}`;
+      break;
   }
-  
-  // Remove requests older than 1 minute
-  openAIRateLimit.requests = openAIRateLimit.requests.filter(
-    time => (now - time) < 60000
-  );
-  
-  // Check if we're under the limit
-  if (openAIRateLimit.requests.length >= openAIRateLimit.requestsPerMinute) {
-    console.log('OpenAI rate limit reached:', {
-      requestsInLastMinute: openAIRateLimit.requests.length,
-      limit: openAIRateLimit.requestsPerMinute
-    });
-    return false;
-  }
-  
-  // Add current request
-  openAIRateLimit.requests.push(now);
-  return true;
+
+  return summary;
 }
 
 // Summary API endpoint
 app.post('/api/summarize', async (req, res) => {
-  if (!process.env.OPENAI_API_KEY) {
-    return res.status(500).json({ error: 'OpenAI API key not configured' });
-  }
-
   const { content, type } = req.body;
   if (!content || !type) {
     return res.status(400).json({ error: 'Content and type are required' });
@@ -454,60 +459,9 @@ app.post('/api/summarize', async (req, res) => {
     return res.json({ summary: summaryCache[cacheKey], fromCache: true });
   }
 
-  // Check rate limit
-  if (!checkOpenAIRateLimit()) {
-    console.log('Rate limit exceeded, returning 429');
-    return res.status(429).json({ 
-      error: 'Rate limit exceeded. Please try again in a minute.',
-      retryAfter: 60
-    });
-  }
-
   try {
     console.log('Generating new summary for:', type);
-    const prompt = `Summarize this ${type} in a concise way:\n\n${content}`;
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a helpful assistant that summarizes content concisely.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: 150,
-        temperature: 0.7
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('OpenAI API error:', {
-        status: response.status,
-        statusText: response.statusText,
-        error: errorData
-      });
-
-      if (response.status === 429) {
-        return res.status(429).json({ 
-          error: 'OpenAI rate limit exceeded. Please try again in a minute.',
-          retryAfter: 60
-        });
-      }
-      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const summary = data.choices[0].message.content.trim();
+    const summary = generateSummary(content, type);
     
     // Cache the summary
     summaryCache[cacheKey] = summary;
