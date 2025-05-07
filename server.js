@@ -77,6 +77,25 @@ try {
   cachedPapers = []; 
 }
 
+// Add this after the cache metadata loading
+console.log('Cache Status:', {
+  news: {
+    lastUpdate: cacheMetadata.news.lastUpdate,
+    totalPages: cacheMetadata.news.totalPages,
+    itemsCount: cachedNews.length
+  },
+  videos: {
+    lastUpdate: cacheMetadata.videos.lastUpdate,
+    totalPages: cacheMetadata.videos.totalPages,
+    itemsCount: cachedVideos.length
+  },
+  papers: {
+    lastUpdate: cacheMetadata.papers.lastUpdate,
+    totalPages: cacheMetadata.papers.totalPages,
+    itemsCount: cachedPapers.length
+  }
+});
+
 // Helper function to check if cache needs update
 function needsUpdate(type) {
   const lastUpdate = cacheMetadata[type].lastUpdate;
@@ -86,12 +105,55 @@ function needsUpdate(type) {
   const lastUpdateDate = new Date(lastUpdate);
   const hoursSinceUpdate = (now - lastUpdateDate) / (1000 * 60 * 60);
   
-  return hoursSinceUpdate >= 24; // Update if more than 24 hours old
+  // Update if more than 1 hour old
+  return hoursSinceUpdate >= 1;
 }
 
 // Helper function to save cache metadata
 function saveCacheMetadata() {
   fs.writeFileSync(CACHE_METADATA_FILE, JSON.stringify(cacheMetadata, null, 2));
+}
+
+// Add rate limit tracking
+const rateLimits = {
+  gnews: {
+    callsToday: 0,
+    lastReset: new Date(),
+    maxCallsPerDay: 100
+  },
+  youtube: {
+    unitsToday: 0,
+    lastReset: new Date(),
+    maxUnitsPerDay: 10000
+  }
+};
+
+// Add rate limit check function
+function checkRateLimits(type) {
+  const now = new Date();
+  
+  // Reset counters if it's a new day
+  if (now.getDate() !== rateLimits[type].lastReset.getDate()) {
+    rateLimits[type].callsToday = 0;
+    rateLimits[type].unitsToday = 0;
+    rateLimits[type].lastReset = now;
+  }
+  
+  if (type === 'gnews') {
+    if (rateLimits.gnews.callsToday >= rateLimits.gnews.maxCallsPerDay) {
+      console.warn('GNews API rate limit reached for today');
+      return false;
+    }
+    rateLimits.gnews.callsToday += 3; // 3 calls per update
+  } else if (type === 'youtube') {
+    if (rateLimits.youtube.unitsToday >= rateLimits.youtube.maxUnitsPerDay) {
+      console.warn('YouTube API rate limit reached for today');
+      return false;
+    }
+    rateLimits.youtube.unitsToday += 300; // 300 units per update
+  }
+  
+  return true;
 }
 
 // News API endpoint
@@ -107,42 +169,51 @@ app.get('/api/news', async (req, res) => {
 
   // Check if we need to update the cache
   if (needsUpdate('news')) {
+    console.log('Updating news cache...');
     try {
-      // Fetch multiple pages of news to get more content
-      const newsPromises = [];
-      for (let i = 1; i <= 3; i++) {
-        const url = `https://gnews.io/api/v4/search?q=ai&lang=en&max=50&page=${i}&token=${process.env.GNEWS_API_KEY}`;
-        newsPromises.push(fetch(url).then(res => res.json()));
-      }
-
-      const results = await Promise.all(newsPromises);
-      let articles = [];
-      
-      // Combine articles from all pages
-      results.forEach(result => {
-        if (result.articles && result.articles.length > 0) {
-          articles = articles.concat(result.articles.map(article => ({
-            ...article,
-            image: article.image || article.urlToImage || `https://picsum.photos/200/120?random=${Math.random()}`
-          })));
+      // Check rate limits before making API calls
+      if (!checkRateLimits('gnews')) {
+        console.log('Using cached news data due to rate limits');
+      } else {
+        // Fetch multiple pages of news to get more content
+        const newsPromises = [];
+        for (let i = 1; i <= 3; i++) {
+          const url = `https://gnews.io/api/v4/search?q=ai&lang=en&max=50&page=${i}&token=${process.env.GNEWS_API_KEY}`;
+          newsPromises.push(fetch(url).then(res => res.json()));
         }
-      });
 
-      // Remove duplicates based on URL
-      articles = articles.filter((article, index, self) =>
-        index === self.findIndex((a) => a.url === article.url)
-      );
+        const results = await Promise.all(newsPromises);
+        let articles = [];
+        
+        // Combine articles from all pages
+        results.forEach(result => {
+          if (result.articles && result.articles.length > 0) {
+            articles = articles.concat(result.articles.map(article => ({
+              ...article,
+              image: article.image || article.urlToImage || `https://picsum.photos/200/120?random=${Math.random()}`
+            })));
+          }
+        });
 
-      if (articles.length > 0) {
-        cachedNews = articles;
-        fs.writeFileSync(NEWS_CACHE_FILE, JSON.stringify(cachedNews));
-        cacheMetadata.news.lastUpdate = new Date().toISOString();
-        cacheMetadata.news.totalPages = Math.ceil(articles.length / pageSize);
-        saveCacheMetadata();
+        // Remove duplicates based on URL
+        articles = articles.filter((article, index, self) =>
+          index === self.findIndex((a) => a.url === article.url)
+        );
+
+        if (articles.length > 0) {
+          cachedNews = articles;
+          fs.writeFileSync(NEWS_CACHE_FILE, JSON.stringify(cachedNews));
+          cacheMetadata.news.lastUpdate = new Date().toISOString();
+          cacheMetadata.news.totalPages = Math.ceil(articles.length / pageSize);
+          saveCacheMetadata();
+          console.log(`News cache updated with ${articles.length} articles`);
+        }
       }
     } catch (error) {
       console.error('News API error:', error.message);
     }
+  } else {
+    console.log('Using cached news data');
   }
 
   // Return paginated results
@@ -150,7 +221,12 @@ app.get('/api/news', async (req, res) => {
   res.json({
     articles: paginatedArticles,
     totalPages: cacheMetadata.news.totalPages,
-    currentPage: page
+    currentPage: page,
+    fromCache: !needsUpdate('news'),
+    rateLimitStatus: {
+      callsToday: rateLimits.gnews.callsToday,
+      maxCallsPerDay: rateLimits.gnews.maxCallsPerDay
+    }
   });
 });
 
@@ -167,57 +243,66 @@ app.get('/api/videos', async (req, res) => {
 
   // Check if we need to update the cache
   if (needsUpdate('videos')) {
+    console.log('Updating videos cache...');
     try {
-      const channelId = 'UC_x5XG1OV2P6uZZ5FSM9Ttw'; // Google Developers
-      const publishedAfter = new Date();
-      publishedAfter.setDate(publishedAfter.getDate() - 7); // 7 days ago
-      const publishedAfterISO = publishedAfter.toISOString();
+      // Check rate limits before making API calls
+      if (!checkRateLimits('youtube')) {
+        console.log('Using cached videos data due to rate limits');
+      } else {
+        const channelId = 'UC_x5XG1OV2P6uZZ5FSM9Ttw'; // Google Developers
+        const publishedAfter = new Date();
+        publishedAfter.setDate(publishedAfter.getDate() - 7); // 7 days ago
+        const publishedAfterISO = publishedAfter.toISOString();
 
-      // Fetch multiple pages of videos
-      const videoPromises = [];
-      let nextPageToken = null;
-      
-      for (let i = 0; i < 3; i++) {
-        let url = `https://www.googleapis.com/youtube/v3/search?key=${process.env.YT_API_KEY}&channelId=${channelId}&part=snippet&type=video&maxResults=50&order=date&publishedAfter=${publishedAfterISO}`;
-        if (nextPageToken) {
-          url += `&pageToken=${nextPageToken}`;
-        }
+        // Fetch multiple pages of videos
+        const videoPromises = [];
+        let nextPageToken = null;
         
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`YouTube API responded with status: ${response.status}`);
+        for (let i = 0; i < 3; i++) {
+          let url = `https://www.googleapis.com/youtube/v3/search?key=${process.env.YT_API_KEY}&channelId=${channelId}&part=snippet&type=video&maxResults=50&order=date&publishedAfter=${publishedAfterISO}`;
+          if (nextPageToken) {
+            url += `&pageToken=${nextPageToken}`;
+          }
+          
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error(`YouTube API responded with status: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          if (data.items) {
+            videoPromises.push(...data.items);
+          }
+          
+          nextPageToken = data.nextPageToken;
+          if (!nextPageToken) break;
         }
-        
-        const data = await response.json();
-        if (data.items) {
-          videoPromises.push(...data.items);
+
+        // Filter videos from the last 7 days
+        const filteredItems = videoPromises.filter(item => {
+          const publishedAt = new Date(item.snippet.publishedAt);
+          return publishedAt >= publishedAfter;
+        });
+
+        // Remove duplicates
+        const uniqueItems = filteredItems.filter((item, index, self) =>
+          index === self.findIndex((i) => i.id.videoId === item.id.videoId)
+        );
+
+        if (uniqueItems.length > 0) {
+          cachedVideos = uniqueItems;
+          fs.writeFileSync(VIDEOS_CACHE_FILE, JSON.stringify(cachedVideos));
+          cacheMetadata.videos.lastUpdate = new Date().toISOString();
+          cacheMetadata.videos.totalPages = Math.ceil(uniqueItems.length / pageSize);
+          saveCacheMetadata();
+          console.log(`Videos cache updated with ${uniqueItems.length} videos`);
         }
-        
-        nextPageToken = data.nextPageToken;
-        if (!nextPageToken) break;
-      }
-
-      // Filter videos from the last 7 days
-      const filteredItems = videoPromises.filter(item => {
-        const publishedAt = new Date(item.snippet.publishedAt);
-        return publishedAt >= publishedAfter;
-      });
-
-      // Remove duplicates
-      const uniqueItems = filteredItems.filter((item, index, self) =>
-        index === self.findIndex((i) => i.id.videoId === item.id.videoId)
-      );
-
-      if (uniqueItems.length > 0) {
-        cachedVideos = uniqueItems;
-        fs.writeFileSync(VIDEOS_CACHE_FILE, JSON.stringify(cachedVideos));
-        cacheMetadata.videos.lastUpdate = new Date().toISOString();
-        cacheMetadata.videos.totalPages = Math.ceil(uniqueItems.length / pageSize);
-        saveCacheMetadata();
       }
     } catch (error) {
       console.error('Videos API error:', error.message);
     }
+  } else {
+    console.log('Using cached videos data');
   }
 
   // Return paginated results
@@ -225,7 +310,12 @@ app.get('/api/videos', async (req, res) => {
   res.json({
     items: paginatedVideos,
     totalPages: cacheMetadata.videos.totalPages,
-    currentPage: page
+    currentPage: page,
+    fromCache: !needsUpdate('videos'),
+    rateLimitStatus: {
+      unitsToday: rateLimits.youtube.unitsToday,
+      maxUnitsPerDay: rateLimits.youtube.maxUnitsPerDay
+    }
   });
 });
 
@@ -238,6 +328,7 @@ app.get('/api/papers', async (req, res) => {
 
   // Check if we need to update the cache
   if (needsUpdate('papers')) {
+    console.log('Updating papers cache...');
     try {
       const url = 'http://export.arxiv.org/api/query?search_query=cat:cs.AI&sortBy=lastUpdatedDate&sortOrder=descending&max_results=50';
       const response = await fetch(url);
@@ -269,11 +360,14 @@ app.get('/api/papers', async (req, res) => {
           cacheMetadata.papers.lastUpdate = new Date().toISOString();
           cacheMetadata.papers.totalPages = Math.ceil(papers.length / pageSize);
           saveCacheMetadata();
+          console.log(`Papers cache updated with ${papers.length} papers`);
         }
       });
     } catch (error) {
       console.error('Papers API error:', error.message);
     }
+  } else {
+    console.log('Using cached papers data');
   }
 
   // Return paginated results
@@ -281,7 +375,8 @@ app.get('/api/papers', async (req, res) => {
   res.json({
     papers: paginatedPapers,
     totalPages: cacheMetadata.papers.totalPages,
-    currentPage: page
+    currentPage: page,
+    fromCache: !needsUpdate('papers')
   });
 });
 
@@ -332,6 +427,35 @@ app.post('/api/summarize', async (req, res) => {
     console.error('Summary generation error:', error.message);
     res.status(500).json({ error: 'Failed to generate summary' });
   }
+});
+
+// Cache status endpoint
+app.get('/api/cache-status', (req, res) => {
+  const now = new Date();
+  const status = {
+    news: {
+      lastUpdate: cacheMetadata.news.lastUpdate,
+      nextUpdate: new Date(new Date(cacheMetadata.news.lastUpdate).getTime() + 24 * 60 * 60 * 1000),
+      totalPages: cacheMetadata.news.totalPages,
+      itemsCount: cachedNews.length,
+      needsUpdate: needsUpdate('news')
+    },
+    videos: {
+      lastUpdate: cacheMetadata.videos.lastUpdate,
+      nextUpdate: new Date(new Date(cacheMetadata.videos.lastUpdate).getTime() + 24 * 60 * 60 * 1000),
+      totalPages: cacheMetadata.videos.totalPages,
+      itemsCount: cachedVideos.length,
+      needsUpdate: needsUpdate('videos')
+    },
+    papers: {
+      lastUpdate: cacheMetadata.papers.lastUpdate,
+      nextUpdate: new Date(new Date(cacheMetadata.papers.lastUpdate).getTime() + 24 * 60 * 60 * 1000),
+      totalPages: cacheMetadata.papers.totalPages,
+      itemsCount: cachedPapers.length,
+      needsUpdate: needsUpdate('papers')
+    }
+  };
+  res.json(status);
 });
 
 app.listen(PORT, () => {
