@@ -157,32 +157,9 @@
             videos: []
         };
 
-        // Navigation
-        document.querySelectorAll('.nav a').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const page = e.target.dataset.page;
-                
-                // Update active state
-                document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
-                e.target.classList.add('active');
-                
-                // Show selected page
-                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-                document.getElementById(`${page}-page`).classList.add('active');
-                
-                // Load data if not already loaded
-                if (allData[page].length === 0) {
-                    if (page === 'news') loadNews();
-                    else if (page === 'papers') loadPapers();
-                    else if (page === 'videos') loadVideos();
-                }
-            });
-        });
-
-        async function fetchData(endpoint) {
+        async function fetchData(endpoint, page = 1) {
             try {
-                const response = await fetch(`${API_BASE}${endpoint}`);
+                const response = await fetch(`${API_BASE}${endpoint}?page=${page}`);
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 return await response.json();
             } catch (error) {
@@ -240,83 +217,103 @@
             `;
         }
 
-        function updatePagination(type, totalItems) {
-            const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+        function updatePagination(type, totalPages, currentPage) {
             const pagination = document.getElementById(`${type}-pagination`);
-            pagination.innerHTML = `
-                <button onclick="changePage('${type}', ${currentPage[type] - 1})" 
-                        ${currentPage[type] === 1 ? 'disabled' : ''}>Previous</button>
-                <span>Page ${currentPage[type]} of ${totalPages}</span>
-                <button onclick="changePage('${type}', ${currentPage[type] + 1})"
-                        ${currentPage[type] === totalPages ? 'disabled' : ''}>Next</button>
+            let paginationHtml = '';
+            
+            // Previous button
+            paginationHtml += `
+                <button onclick="changePage('${type}', ${currentPage - 1})" 
+                        ${currentPage === 1 ? 'disabled' : ''}>Previous</button>
             `;
+            
+            // Page numbers
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            if (startPage > 1) {
+                paginationHtml += `<button onclick="changePage('${type}', 1)">1</button>`;
+                if (startPage > 2) {
+                    paginationHtml += `<span>...</span>`;
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHtml += `
+                    <button onclick="changePage('${type}', ${i})" 
+                            ${i === currentPage ? 'class="active"' : ''}>${i}</button>
+                `;
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    paginationHtml += `<span>...</span>`;
+                }
+                paginationHtml += `<button onclick="changePage('${type}', ${totalPages})">${totalPages}</button>`;
+            }
+            
+            // Next button
+            paginationHtml += `
+                <button onclick="changePage('${type}', ${currentPage + 1})"
+                        ${currentPage === totalPages ? 'disabled' : ''}>Next</button>
+            `;
+            
+            pagination.innerHTML = paginationHtml;
         }
 
         function changePage(type, page) {
-            if (page < 1 || page > Math.ceil(allData[type].length / ITEMS_PER_PAGE)) return;
+            if (page < 1) return;
             currentPage[type] = page;
-            displayItems(type);
+            loadContent(type);
         }
 
-        function displayItems(type) {
-            const start = (currentPage[type] - 1) * ITEMS_PER_PAGE;
-            const end = start + ITEMS_PER_PAGE;
-            const items = allData[type].slice(start, end);
-            
+        async function loadContent(type) {
             const container = document.getElementById(type);
-            if (type === 'news') {
-                container.innerHTML = items.map(createNewsItem).join('');
-            } else if (type === 'papers') {
-                container.innerHTML = items.map(createPaperItem).join('');
-            } else if (type === 'videos') {
-                container.innerHTML = items.map(createVideoItem).join('');
-            }
+            container.innerHTML = '<div class="loading">Loading...</div>';
             
-            updatePagination(type, allData[type].length);
-        }
-
-        async function loadNews() {
-            const newsDiv = document.getElementById('news');
-            newsDiv.innerHTML = '<div class="loading">Loading news...</div>';
-            
-            const data = await fetchData('/api/news');
-            if (data && data.articles) {
-                allData.news = data.articles;
-                displayItems('news');
+            const data = await fetchData(`/api/${type}`, currentPage[type]);
+            if (data) {
+                if (type === 'news') {
+                    allData.news = data.articles;
+                    container.innerHTML = data.articles.map(createNewsItem).join('');
+                    updatePagination(type, data.totalPages, data.currentPage);
+                } else if (type === 'papers') {
+                    allData.papers = data.papers;
+                    container.innerHTML = data.papers.map(createPaperItem).join('');
+                    updatePagination(type, data.totalPages, data.currentPage);
+                } else if (type === 'videos') {
+                    allData.videos = data.items;
+                    container.innerHTML = data.items.map(createVideoItem).join('');
+                    updatePagination(type, data.totalPages, data.currentPage);
+                }
             } else {
-                newsDiv.innerHTML = '<div class="error">Failed to load news</div>';
+                container.innerHTML = '<div class="error">Failed to load content</div>';
             }
         }
 
-        async function loadPapers() {
-            const papersDiv = document.getElementById('papers');
-            papersDiv.innerHTML = '<div class="loading">Loading papers...</div>';
-            
-            const data = await fetchData('/api/papers');
-            if (data && data.papers) {
-                allData.papers = data.papers;
-                displayItems('papers');
-            } else {
-                papersDiv.innerHTML = '<div class="error">Failed to load papers</div>';
-            }
-        }
-
-        async function loadVideos() {
-            const videosDiv = document.getElementById('videos');
-            videosDiv.innerHTML = '<div class="loading">Loading videos...</div>';
-            
-            const data = await fetchData('/api/videos');
-            if (data && data.items) {
-                allData.videos = data.items;
-                displayItems('videos');
-            } else {
-                videosDiv.innerHTML = '<div class="error">Failed to load videos</div>';
-            }
-        }
+        // Navigation
+        document.querySelectorAll('.nav a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = e.target.dataset.page;
+                
+                // Update active state
+                document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                // Show selected page
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById(`${page}-page`).classList.add('active');
+                
+                // Load content
+                loadContent(page);
+            });
+        });
 
         // Load initial data
         window.addEventListener('load', () => {
-            loadNews();
+            loadContent('news');
         });
     </script>
   </body>

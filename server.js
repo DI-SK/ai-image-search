@@ -26,10 +26,30 @@ const NEWS_CACHE_FILE = path.join(dataDir, 'news_cache.json');
 const VIDEOS_CACHE_FILE = path.join(dataDir, 'video_cache.json');
 const PAPERS_CACHE_FILE = path.join(dataDir, 'papers_cache.json');
 
+// Cache metadata
+const CACHE_METADATA_FILE = path.join(dataDir, 'cache_metadata.json');
+
+// Load cache metadata
+let cacheMetadata = {
+  lastUpdate: null,
+  news: { lastUpdate: null, totalPages: 0 },
+  videos: { lastUpdate: null, totalPages: 0 },
+  papers: { lastUpdate: null, totalPages: 0 }
+};
+
+try {
+  if (fs.existsSync(CACHE_METADATA_FILE)) {
+    cacheMetadata = JSON.parse(fs.readFileSync(CACHE_METADATA_FILE, 'utf8'));
+  }
+} catch (e) {
+  console.warn('Could not load cache metadata:', e.message);
+}
+
 // Load cache from disk on startup
 let cachedNews = [];
 let cachedVideos = [];
 let cachedPapers = [];
+
 try {
   if (fs.existsSync(NEWS_CACHE_FILE)) {
     cachedNews = JSON.parse(fs.readFileSync(NEWS_CACHE_FILE, 'utf8'));
@@ -38,6 +58,7 @@ try {
   console.warn('Could not load news cache:', e.message);
   cachedNews = []; 
 }
+
 try {
   if (fs.existsSync(VIDEOS_CACHE_FILE)) {
     cachedVideos = JSON.parse(fs.readFileSync(VIDEOS_CACHE_FILE, 'utf8'));
@@ -46,6 +67,7 @@ try {
   console.warn('Could not load videos cache:', e.message);
   cachedVideos = []; 
 }
+
 try {
   if (fs.existsSync(PAPERS_CACHE_FILE)) {
     cachedPapers = JSON.parse(fs.readFileSync(PAPERS_CACHE_FILE, 'utf8'));
@@ -55,40 +77,70 @@ try {
   cachedPapers = []; 
 }
 
+// Helper function to check if cache needs update
+function needsUpdate(type) {
+  const lastUpdate = cacheMetadata[type].lastUpdate;
+  if (!lastUpdate) return true;
+  
+  const now = new Date();
+  const lastUpdateDate = new Date(lastUpdate);
+  const hoursSinceUpdate = (now - lastUpdateDate) / (1000 * 60 * 60);
+  
+  return hoursSinceUpdate >= 24; // Update if more than 24 hours old
+}
+
+// Helper function to save cache metadata
+function saveCacheMetadata() {
+  fs.writeFileSync(CACHE_METADATA_FILE, JSON.stringify(cacheMetadata, null, 2));
+}
+
 // News API endpoint
 app.get('/api/news', async (req, res) => {
   if (!process.env.GNEWS_API_KEY) {
     return res.status(500).json({ error: 'GNews API key not configured' });
   }
 
-  const url = `https://gnews.io/api/v4/search?q=ai&lang=en&max=10&token=${process.env.GNEWS_API_KEY}`;
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`GNews API responded with status: ${response.status}`);
-    }
-    const data = await response.json();
-    let articles = (data.articles && data.articles.length > 0) ? data.articles : [];
-    
-    // Ensure each article has an image URL
-    articles = articles.map(article => ({
-      ...article,
-      image: article.image || article.urlToImage || `https://picsum.photos/200/120?random=${Math.random()}`
-    }));
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = 10;
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
 
-    if (articles.length > 0) {
-      cachedNews = articles;
-      fs.writeFileSync(NEWS_CACHE_FILE, JSON.stringify(cachedNews));
-    }
-    res.json({ articles });
-  } catch (error) {
-    console.error('News API error:', error.message);
-    if (cachedNews.length > 0) {
-      res.json({ articles: cachedNews });
-    } else {
-      res.status(500).json({ error: 'Failed to fetch news and no cached data available' });
+  // Check if we need to update the cache
+  if (needsUpdate('news')) {
+    try {
+      const url = `https://gnews.io/api/v4/search?q=ai&lang=en&max=50&token=${process.env.GNEWS_API_KEY}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`GNews API responded with status: ${response.status}`);
+      }
+      const data = await response.json();
+      let articles = (data.articles && data.articles.length > 0) ? data.articles : [];
+      
+      // Ensure each article has an image URL
+      articles = articles.map(article => ({
+        ...article,
+        image: article.image || article.urlToImage || `https://picsum.photos/200/120?random=${Math.random()}`
+      }));
+
+      if (articles.length > 0) {
+        cachedNews = articles;
+        fs.writeFileSync(NEWS_CACHE_FILE, JSON.stringify(cachedNews));
+        cacheMetadata.news.lastUpdate = new Date().toISOString();
+        cacheMetadata.news.totalPages = Math.ceil(articles.length / pageSize);
+        saveCacheMetadata();
+      }
+    } catch (error) {
+      console.error('News API error:', error.message);
     }
   }
+
+  // Return paginated results
+  const paginatedArticles = cachedNews.slice(startIndex, endIndex);
+  res.json({
+    articles: paginatedArticles,
+    totalPages: cacheMetadata.news.totalPages,
+    currentPage: page
+  });
 });
 
 // Videos API endpoint
@@ -97,82 +149,96 @@ app.get('/api/videos', async (req, res) => {
     return res.status(500).json({ error: 'YouTube API key not configured' });
   }
 
-  const category = req.query.category || 'all';
-  let videos = [];
-  try {
-    const channelId = 'UC_x5XG1OV2P6uZZ5FSM9Ttw'; // Google Developers
-    const url = `https://www.googleapis.com/youtube/v3/search?key=${process.env.YT_API_KEY}&channelId=${channelId}&part=snippet&type=video&maxResults=3`;
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`YouTube API responded with status: ${response.status}`);
-    }
-    const data = await response.json();
-    if (data.items) videos.push(...data.items);
-    
-    if (category !== 'all') {
-      videos = videos.filter(v => 
-        v.snippet.title.toLowerCase().includes(category) || 
-        v.snippet.description.toLowerCase().includes(category)
-      );
-    }
-    
-    if (videos.length > 0) {
-      cachedVideos = videos;
-      fs.writeFileSync(VIDEOS_CACHE_FILE, JSON.stringify(cachedVideos));
-    }
-    res.json({ items: videos });
-  } catch (error) {
-    console.error('Videos API error:', error.message);
-    if (cachedVideos.length > 0) {
-      res.json({ items: cachedVideos });
-    } else {
-      res.status(500).json({ error: 'Failed to fetch videos and no cached data available' });
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = 10;
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+
+  // Check if we need to update the cache
+  if (needsUpdate('videos')) {
+    try {
+      const channelId = 'UC_x5XG1OV2P6uZZ5FSM9Ttw'; // Google Developers
+      const url = `https://www.googleapis.com/youtube/v3/search?key=${process.env.YT_API_KEY}&channelId=${channelId}&part=snippet&type=video&maxResults=50`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`YouTube API responded with status: ${response.status}`);
+      }
+      const data = await response.json();
+      if (data.items) {
+        cachedVideos = data.items;
+        fs.writeFileSync(VIDEOS_CACHE_FILE, JSON.stringify(cachedVideos));
+        cacheMetadata.videos.lastUpdate = new Date().toISOString();
+        cacheMetadata.videos.totalPages = Math.ceil(data.items.length / pageSize);
+        saveCacheMetadata();
+      }
+    } catch (error) {
+      console.error('Videos API error:', error.message);
     }
   }
+
+  // Return paginated results
+  const paginatedVideos = cachedVideos.slice(startIndex, endIndex);
+  res.json({
+    items: paginatedVideos,
+    totalPages: cacheMetadata.videos.totalPages,
+    currentPage: page
+  });
 });
 
 // Research Papers API endpoint
 app.get('/api/papers', async (req, res) => {
-  try {
-    const url = 'http://export.arxiv.org/api/query?search_query=cat:cs.AI&sortBy=lastUpdatedDate&sortOrder=descending&max_results=10';
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      throw new Error(`arXiv API responded with status: ${response.status}`);
-    }
-    
-    const data = await response.text();
-    const parser = new xml2js.Parser();
-    
-    parser.parseString(data, (err, result) => {
-      if (err) {
-        throw new Error('Failed to parse arXiv XML response');
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = 10;
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+
+  // Check if we need to update the cache
+  if (needsUpdate('papers')) {
+    try {
+      const url = 'http://export.arxiv.org/api/query?search_query=cat:cs.AI&sortBy=lastUpdatedDate&sortOrder=descending&max_results=50';
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`arXiv API responded with status: ${response.status}`);
       }
       
-      const entries = result.feed.entry || [];
-      const papers = entries.map(entry => ({
-        title: entry.title[0],
-        abstract: entry.summary[0],
-        url: entry.id[0],
-        published: entry.published[0],
-        authors: entry.author.map(author => author.name[0])
-      }));
+      const data = await response.text();
+      const parser = new xml2js.Parser();
       
-      if (papers.length > 0) {
-        cachedPapers = papers;
-        fs.writeFileSync(PAPERS_CACHE_FILE, JSON.stringify(cachedPapers));
-      }
-      
-      res.json({ papers });
-    });
-  } catch (error) {
-    console.error('Papers API error:', error.message);
-    if (cachedPapers.length > 0) {
-      res.json({ papers: cachedPapers });
-    } else {
-      res.status(500).json({ error: 'Failed to fetch papers and no cached data available' });
+      parser.parseString(data, (err, result) => {
+        if (err) {
+          throw new Error('Failed to parse arXiv XML response');
+        }
+        
+        const entries = result.feed.entry || [];
+        const papers = entries.map(entry => ({
+          title: entry.title[0],
+          abstract: entry.summary[0],
+          url: entry.id[0],
+          published: entry.published[0],
+          authors: entry.author.map(author => author.name[0])
+        }));
+        
+        if (papers.length > 0) {
+          cachedPapers = papers;
+          fs.writeFileSync(PAPERS_CACHE_FILE, JSON.stringify(cachedPapers));
+          cacheMetadata.papers.lastUpdate = new Date().toISOString();
+          cacheMetadata.papers.totalPages = Math.ceil(papers.length / pageSize);
+          saveCacheMetadata();
+        }
+      });
+    } catch (error) {
+      console.error('Papers API error:', error.message);
     }
   }
+
+  // Return paginated results
+  const paginatedPapers = cachedPapers.slice(startIndex, endIndex);
+  res.json({
+    papers: paginatedPapers,
+    totalPages: cacheMetadata.papers.totalPages,
+    currentPage: page
+  });
 });
 
 // Summary API endpoint
