@@ -108,19 +108,30 @@ app.get('/api/news', async (req, res) => {
   // Check if we need to update the cache
   if (needsUpdate('news')) {
     try {
-      const url = `https://gnews.io/api/v4/search?q=ai&lang=en&max=50&token=${process.env.GNEWS_API_KEY}`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`GNews API responded with status: ${response.status}`);
+      // Fetch multiple pages of news to get more content
+      const newsPromises = [];
+      for (let i = 1; i <= 3; i++) {
+        const url = `https://gnews.io/api/v4/search?q=ai&lang=en&max=50&page=${i}&token=${process.env.GNEWS_API_KEY}`;
+        newsPromises.push(fetch(url).then(res => res.json()));
       }
-      const data = await response.json();
-      let articles = (data.articles && data.articles.length > 0) ? data.articles : [];
+
+      const results = await Promise.all(newsPromises);
+      let articles = [];
       
-      // Ensure each article has an image URL
-      articles = articles.map(article => ({
-        ...article,
-        image: article.image || article.urlToImage || `https://picsum.photos/200/120?random=${Math.random()}`
-      }));
+      // Combine articles from all pages
+      results.forEach(result => {
+        if (result.articles && result.articles.length > 0) {
+          articles = articles.concat(result.articles.map(article => ({
+            ...article,
+            image: article.image || article.urlToImage || `https://picsum.photos/200/120?random=${Math.random()}`
+          })));
+        }
+      });
+
+      // Remove duplicates based on URL
+      articles = articles.filter((article, index, self) =>
+        index === self.findIndex((a) => a.url === article.url)
+      );
 
       if (articles.length > 0) {
         cachedNews = articles;
@@ -162,23 +173,46 @@ app.get('/api/videos', async (req, res) => {
       publishedAfter.setDate(publishedAfter.getDate() - 7); // 7 days ago
       const publishedAfterISO = publishedAfter.toISOString();
 
-      const url = `https://www.googleapis.com/youtube/v3/search?key=${process.env.YT_API_KEY}&channelId=${channelId}&part=snippet&type=video&maxResults=50&order=date&publishedAfter=${publishedAfterISO}`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`YouTube API responded with status: ${response.status}`);
+      // Fetch multiple pages of videos
+      const videoPromises = [];
+      let nextPageToken = null;
+      
+      for (let i = 0; i < 3; i++) {
+        let url = `https://www.googleapis.com/youtube/v3/search?key=${process.env.YT_API_KEY}&channelId=${channelId}&part=snippet&type=video&maxResults=50&order=date&publishedAfter=${publishedAfterISO}`;
+        if (nextPageToken) {
+          url += `&pageToken=${nextPageToken}`;
+        }
+        
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`YouTube API responded with status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        if (data.items) {
+          videoPromises.push(...data.items);
+        }
+        
+        nextPageToken = data.nextPageToken;
+        if (!nextPageToken) break;
       }
-      const data = await response.json();
-      if (data.items) {
-        // Filter out any videos that might be older than 7 days (due to API limitations)
-        const filteredItems = data.items.filter(item => {
-          const publishedAt = new Date(item.snippet.publishedAt);
-          return publishedAt >= publishedAfter;
-        });
 
-        cachedVideos = filteredItems;
+      // Filter videos from the last 7 days
+      const filteredItems = videoPromises.filter(item => {
+        const publishedAt = new Date(item.snippet.publishedAt);
+        return publishedAt >= publishedAfter;
+      });
+
+      // Remove duplicates
+      const uniqueItems = filteredItems.filter((item, index, self) =>
+        index === self.findIndex((i) => i.id.videoId === item.id.videoId)
+      );
+
+      if (uniqueItems.length > 0) {
+        cachedVideos = uniqueItems;
         fs.writeFileSync(VIDEOS_CACHE_FILE, JSON.stringify(cachedVideos));
         cacheMetadata.videos.lastUpdate = new Date().toISOString();
-        cacheMetadata.videos.totalPages = Math.ceil(filteredItems.length / pageSize);
+        cacheMetadata.videos.totalPages = Math.ceil(uniqueItems.length / pageSize);
         saveCacheMetadata();
       }
     } catch (error) {
