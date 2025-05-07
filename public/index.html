@@ -282,6 +282,51 @@
                 height: 200px;
             }
         }
+
+        .summary-button {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .summary-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .summary-button:disabled {
+            background: var(--glass-bg);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .summary {
+            margin-top: 15px;
+            padding: 15px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .summary h4 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .summary p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
     </style>
   </head>
   <body>
@@ -353,6 +398,10 @@
                         <h3><a href="${article.url}" target="_blank">${article.title}</a></h3>
                         <p>${article.description}</p>
                         <small>Published: ${new Date(article.publishedAt).toLocaleDateString()}</small>
+                        <button class="summary-button" onclick="summarizeContent('news', '${article.title}', '${article.description.replace(/'/g, "\\'")}')">
+                            Summarize
+                        </button>
+                        <div id="summary-news-${article.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}" class="summary" style="display: none;"></div>
                     </div>
                 </div>
             `;
@@ -369,6 +418,10 @@
                         <small>Authors: ${paper.authors.join(', ')}</small>
                         <br>
                         <small>Published: ${new Date(paper.published).toLocaleDateString()}</small>
+                        <button class="summary-button" onclick="summarizeContent('paper', '${paper.title}', '${paper.abstract.replace(/'/g, "\\'")}')">
+                            Summarize
+                        </button>
+                        <div id="summary-paper-${paper.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}" class="summary" style="display: none;"></div>
                     </div>
                 </div>
             `;
@@ -396,6 +449,10 @@
                         <h3><a href="https://www.youtube.com/watch?v=${video.id.videoId}" target="_blank">${video.snippet.title}</a></h3>
                         <p>${video.snippet.description}</p>
                         <small>Published: ${timeAgo}</small>
+                        <button class="summary-button" onclick="summarizeContent('video', '${video.snippet.title}', '${video.snippet.description.replace(/'/g, "\\'")}')">
+                            Summarize
+                        </button>
+                        <div id="summary-video-${video.snippet.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}" class="summary" style="display: none;"></div>
                     </div>
                 </div>
             `;
@@ -500,6 +557,58 @@
         window.addEventListener('load', () => {
             loadContent('news');
         });
+
+        async function summarizeContent(type, title, content) {
+            const summaryId = `summary-${type}-${title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`;
+            const summaryDiv = document.getElementById(summaryId);
+            const button = summaryDiv.previousElementSibling;
+
+            // If summary is already shown, toggle it
+            if (summaryDiv.style.display !== 'none') {
+                summaryDiv.style.display = 'none';
+                button.textContent = 'Summarize';
+                return;
+            }
+
+            // Show loading state
+            button.disabled = true;
+            button.textContent = 'Summarizing...';
+            summaryDiv.style.display = 'block';
+            summaryDiv.innerHTML = '<div class="loading">Generating summary...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/summarize`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        content: content,
+                        type: type
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to generate summary');
+                }
+
+                const data = await response.json();
+                summaryDiv.innerHTML = `
+                    <h4>AI Summary</h4>
+                    <p>${data.summary}</p>
+                `;
+                button.textContent = 'Hide Summary';
+            } catch (error) {
+                console.error('Summary error:', error);
+                summaryDiv.innerHTML = `
+                    <h4>Error</h4>
+                    <p>Failed to generate summary. Please try again later.</p>
+                `;
+                button.textContent = 'Try Again';
+            } finally {
+                button.disabled = false;
+            }
+        }
     </script>
   </body>
 </html> 
