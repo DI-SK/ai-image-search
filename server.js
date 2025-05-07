@@ -386,6 +386,50 @@ app.get('/api/papers', async (req, res) => {
   });
 });
 
+// Add summary cache
+const SUMMARY_CACHE_FILE = path.join(dataDir, 'summary_cache.json');
+let summaryCache = {};
+
+try {
+  if (fs.existsSync(SUMMARY_CACHE_FILE)) {
+    summaryCache = JSON.parse(fs.readFileSync(SUMMARY_CACHE_FILE, 'utf8'));
+  }
+} catch (e) {
+  console.warn('Could not load summary cache:', e.message);
+  summaryCache = {};
+}
+
+// Add rate limiting for OpenAI
+const openAIRateLimit = {
+  requestsPerMinute: 3,
+  requests: [],
+  lastReset: new Date()
+};
+
+function checkOpenAIRateLimit() {
+  const now = new Date();
+  
+  // Reset if it's a new minute
+  if (now.getMinutes() !== openAIRateLimit.lastReset.getMinutes()) {
+    openAIRateLimit.requests = [];
+    openAIRateLimit.lastReset = now;
+  }
+  
+  // Remove requests older than 1 minute
+  openAIRateLimit.requests = openAIRateLimit.requests.filter(
+    time => (now - time) < 60000
+  );
+  
+  // Check if we're under the limit
+  if (openAIRateLimit.requests.length >= openAIRateLimit.requestsPerMinute) {
+    return false;
+  }
+  
+  // Add current request
+  openAIRateLimit.requests.push(now);
+  return true;
+}
+
 // Summary API endpoint
 app.post('/api/summarize', async (req, res) => {
   if (!process.env.OPENAI_API_KEY) {
@@ -395,6 +439,23 @@ app.post('/api/summarize', async (req, res) => {
   const { content, type } = req.body;
   if (!content || !type) {
     return res.status(400).json({ error: 'Content and type are required' });
+  }
+
+  // Create a cache key from the content
+  const cacheKey = `${type}-${content.substring(0, 100)}`;
+  
+  // Check cache first
+  if (summaryCache[cacheKey]) {
+    console.log('Using cached summary');
+    return res.json({ summary: summaryCache[cacheKey], fromCache: true });
+  }
+
+  // Check rate limit
+  if (!checkOpenAIRateLimit()) {
+    return res.status(429).json({ 
+      error: 'Rate limit exceeded. Please try again in a minute.',
+      retryAfter: 60
+    });
   }
 
   try {
@@ -423,12 +484,23 @@ app.post('/api/summarize', async (req, res) => {
     });
 
     if (!response.ok) {
+      if (response.status === 429) {
+        return res.status(429).json({ 
+          error: 'OpenAI rate limit exceeded. Please try again in a minute.',
+          retryAfter: 60
+        });
+      }
       throw new Error(`OpenAI API responded with status: ${response.status}`);
     }
 
     const data = await response.json();
     const summary = data.choices[0].message.content.trim();
-    res.json({ summary });
+    
+    // Cache the summary
+    summaryCache[cacheKey] = summary;
+    fs.writeFileSync(SUMMARY_CACHE_FILE, JSON.stringify(summaryCache));
+    
+    res.json({ summary, fromCache: false });
   } catch (error) {
     console.error('Summary generation error:', error.message);
     res.status(500).json({ error: 'Failed to generate summary' });

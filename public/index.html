@@ -588,13 +588,29 @@
                     })
                 });
 
+                const data = await response.json();
+
                 if (!response.ok) {
-                    throw new Error('Failed to generate summary');
+                    if (response.status === 429) {
+                        // Rate limit error
+                        const retryAfter = data.retryAfter || 60;
+                        summaryDiv.innerHTML = `
+                            <h4>Rate Limit</h4>
+                            <p>${data.error}</p>
+                            <p>Please try again in ${retryAfter} seconds.</p>
+                        `;
+                        button.textContent = 'Try Again';
+                        // Enable button after retry period
+                        setTimeout(() => {
+                            button.disabled = false;
+                        }, retryAfter * 1000);
+                        return;
+                    }
+                    throw new Error(data.error || 'Failed to generate summary');
                 }
 
-                const data = await response.json();
                 summaryDiv.innerHTML = `
-                    <h4>AI Summary</h4>
+                    <h4>AI Summary${data.fromCache ? ' (Cached)' : ''}</h4>
                     <p>${data.summary}</p>
                 `;
                 button.textContent = 'Hide Summary';
@@ -602,11 +618,13 @@
                 console.error('Summary error:', error);
                 summaryDiv.innerHTML = `
                     <h4>Error</h4>
-                    <p>Failed to generate summary. Please try again later.</p>
+                    <p>${error.message}</p>
                 `;
                 button.textContent = 'Try Again';
             } finally {
-                button.disabled = false;
+                if (response.status !== 429) {
+                    button.disabled = false;
+                }
             }
         }
     </script>
