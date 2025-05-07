@@ -205,13 +205,22 @@
                                video.snippet?.thumbnails?.medium?.url || 
                                video.snippet?.thumbnails?.default?.url || 
                                `https://picsum.photos/200/120?random=${Math.random()}`;
+            
+            // Calculate days ago
+            const publishedAt = new Date(video.snippet.publishedAt);
+            const now = new Date();
+            const daysAgo = Math.floor((now - publishedAt) / (1000 * 60 * 60 * 24));
+            const timeAgo = daysAgo === 0 ? 'Today' : 
+                           daysAgo === 1 ? 'Yesterday' : 
+                           `${daysAgo} days ago`;
+
             return `
                 <div class="video-item">
                     <img src="${thumbnailUrl}" alt="${video.snippet.title}" class="thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=No+Thumbnail'">
                     <div class="content">
                         <h3><a href="https://www.youtube.com/watch?v=${video.id.videoId}" target="_blank">${video.snippet.title}</a></h3>
                         <p>${video.snippet.description}</p>
-                        <small>Published: ${new Date(video.snippet.publishedAt).toLocaleDateString()}</small>
+                        <small>Published: ${timeAgo}</small>
                     </div>
                 </div>
             `;

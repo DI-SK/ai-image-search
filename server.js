@@ -158,17 +158,27 @@ app.get('/api/videos', async (req, res) => {
   if (needsUpdate('videos')) {
     try {
       const channelId = 'UC_x5XG1OV2P6uZZ5FSM9Ttw'; // Google Developers
-      const url = `https://www.googleapis.com/youtube/v3/search?key=${process.env.YT_API_KEY}&channelId=${channelId}&part=snippet&type=video&maxResults=50`;
+      const publishedAfter = new Date();
+      publishedAfter.setDate(publishedAfter.getDate() - 7); // 7 days ago
+      const publishedAfterISO = publishedAfter.toISOString();
+
+      const url = `https://www.googleapis.com/youtube/v3/search?key=${process.env.YT_API_KEY}&channelId=${channelId}&part=snippet&type=video&maxResults=50&order=date&publishedAfter=${publishedAfterISO}`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`YouTube API responded with status: ${response.status}`);
       }
       const data = await response.json();
       if (data.items) {
-        cachedVideos = data.items;
+        // Filter out any videos that might be older than 7 days (due to API limitations)
+        const filteredItems = data.items.filter(item => {
+          const publishedAt = new Date(item.snippet.publishedAt);
+          return publishedAt >= publishedAfter;
+        });
+
+        cachedVideos = filteredItems;
         fs.writeFileSync(VIDEOS_CACHE_FILE, JSON.stringify(cachedVideos));
         cacheMetadata.videos.lastUpdate = new Date().toISOString();
-        cacheMetadata.videos.totalPages = Math.ceil(data.items.length / pageSize);
+        cacheMetadata.videos.totalPages = Math.ceil(filteredItems.length / pageSize);
         saveCacheMetadata();
       }
     } catch (error) {
