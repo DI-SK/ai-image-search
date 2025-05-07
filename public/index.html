@@ -457,22 +457,23 @@
             container.innerHTML = '<div class="loading">Loading...</div>';
             
             const data = await fetchData(`/api/${type}`, currentPage[type]);
-            if (data) {
-                if (type === 'news') {
-                    allData.news = data.articles;
-                    container.innerHTML = data.articles.map(createNewsItem).join('');
-                    updatePagination(type, data.totalPages, data.currentPage);
-                } else if (type === 'papers') {
-                    allData.papers = data.papers;
-                    container.innerHTML = data.papers.map(createPaperItem).join('');
-                    updatePagination(type, data.totalPages, data.currentPage);
-                } else if (type === 'videos') {
-                    allData.videos = data.items;
-                    container.innerHTML = data.items.map(createVideoItem).join('');
-                    updatePagination(type, data.totalPages, data.currentPage);
-                }
-            } else {
+            if (!data) {
                 container.innerHTML = '<div class="error">Failed to load content</div>';
+                return;
+            }
+
+            if (type === 'news') {
+                allData.news = data.articles;
+                container.innerHTML = data.articles.map(createNewsItem).join('');
+                updatePagination(type, data.totalPages, data.currentPage);
+            } else if (type === 'papers') {
+                allData.papers = data.papers;
+                container.innerHTML = data.papers.map(createPaperItem).join('');
+                updatePagination(type, data.totalPages, data.currentPage);
+            } else if (type === 'videos') {
+                allData.videos = data.items;
+                container.innerHTML = data.items.map(createVideoItem).join('');
+                updatePagination(type, data.totalPages, data.currentPage);
             }
         }
 

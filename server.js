@@ -206,7 +206,7 @@ app.get('/api/news', async (req, res) => {
           cacheMetadata.news.lastUpdate = new Date().toISOString();
           cacheMetadata.news.totalPages = Math.ceil(articles.length / pageSize);
           saveCacheMetadata();
-          console.log(`News cache updated with ${articles.length} articles`);
+          console.log(`News cache updated with ${articles.length} articles, total pages: ${cacheMetadata.news.totalPages}`);
         }
       }
     } catch (error) {
@@ -218,9 +218,12 @@ app.get('/api/news', async (req, res) => {
 
   // Return paginated results
   const paginatedArticles = cachedNews.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(cachedNews.length / pageSize);
+  console.log(`News pagination: page ${page}, total pages ${totalPages}, items ${paginatedArticles.length}`);
+  
   res.json({
     articles: paginatedArticles,
-    totalPages: cacheMetadata.news.totalPages,
+    totalPages: totalPages,
     currentPage: page,
     fromCache: !needsUpdate('news'),
     rateLimitStatus: {
@@ -295,7 +298,7 @@ app.get('/api/videos', async (req, res) => {
           cacheMetadata.videos.lastUpdate = new Date().toISOString();
           cacheMetadata.videos.totalPages = Math.ceil(uniqueItems.length / pageSize);
           saveCacheMetadata();
-          console.log(`Videos cache updated with ${uniqueItems.length} videos`);
+          console.log(`Videos cache updated with ${uniqueItems.length} videos, total pages: ${cacheMetadata.videos.totalPages}`);
         }
       }
     } catch (error) {
@@ -307,9 +310,12 @@ app.get('/api/videos', async (req, res) => {
 
   // Return paginated results
   const paginatedVideos = cachedVideos.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(cachedVideos.length / pageSize);
+  console.log(`Videos pagination: page ${page}, total pages ${totalPages}, items ${paginatedVideos.length}`);
+  
   res.json({
     items: paginatedVideos,
-    totalPages: cacheMetadata.videos.totalPages,
+    totalPages: totalPages,
     currentPage: page,
     fromCache: !needsUpdate('videos'),
     rateLimitStatus: {
