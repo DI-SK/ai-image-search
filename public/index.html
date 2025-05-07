@@ -376,30 +376,10 @@
         <div class="container">
             <h2>Latest AI News</h2>
             <!-- Top ad spot -->
-            <div class="ad-container">
-                <ins class="adsbygoogle"
-                     style="display:block"
-                     data-ad-client="ca-pub-6348535052118886"
-                     data-ad-slot="2330968069"
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
-                <script>
-                     (adsbygoogle = window.adsbygoogle || []).push({});
-                </script>
-            </div>
+            <div class="ad-container" id="ad-container-news-top"></div>
             <div id="news"></div>
             <!-- Bottom ad spot -->
-            <div class="ad-container">
-                <ins class="adsbygoogle"
-                     style="display:block"
-                     data-ad-client="ca-pub-6348535052118886"
-                     data-ad-slot="2330968069"
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
-                <script>
-                     (adsbygoogle = window.adsbygoogle || []).push({});
-                </script>
-            </div>
+            <div class="ad-container" id="ad-container-news-bottom"></div>
             <div class="pagination" id="news-pagination"></div>
         </div>
     </div>
@@ -408,30 +388,10 @@
         <div class="container">
             <h2>AI Research Papers</h2>
             <!-- Top ad spot -->
-            <div class="ad-container">
-                <ins class="adsbygoogle"
-                     style="display:block"
-                     data-ad-client="ca-pub-6348535052118886"
-                     data-ad-slot="2330968069"
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
-                <script>
-                     (adsbygoogle = window.adsbygoogle || []).push({});
-                </script>
-            </div>
+            <div class="ad-container" id="ad-container-papers-top"></div>
             <div id="papers"></div>
             <!-- Bottom ad spot -->
-            <div class="ad-container">
-                <ins class="adsbygoogle"
-                     style="display:block"
-                     data-ad-client="ca-pub-6348535052118886"
-                     data-ad-slot="2330968069"
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
-                <script>
-                     (adsbygoogle = window.adsbygoogle || []).push({});
-                </script>
-            </div>
+            <div class="ad-container" id="ad-container-papers-bottom"></div>
             <div class="pagination" id="papers-pagination"></div>
         </div>
     </div>
@@ -440,30 +400,10 @@
         <div class="container">
             <h2>AI Videos</h2>
             <!-- Top ad spot -->
-            <div class="ad-container">
-                <ins class="adsbygoogle"
-                     style="display:block"
-                     data-ad-client="ca-pub-6348535052118886"
-                     data-ad-slot="2330968069"
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
-                <script>
-                     (adsbygoogle = window.adsbygoogle || []).push({});
-                </script>
-            </div>
+            <div class="ad-container" id="ad-container-videos-top"></div>
             <div id="videos"></div>
             <!-- Bottom ad spot -->
-            <div class="ad-container">
-                <ins class="adsbygoogle"
-                     style="display:block"
-                     data-ad-client="ca-pub-6348535052118886"
-                     data-ad-slot="2330968069"
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
-                <script>
-                     (adsbygoogle = window.adsbygoogle || []).push({});
-                </script>
-            </div>
+            <div class="ad-container" id="ad-container-videos-bottom"></div>
             <div class="pagination" id="videos-pagination"></div>
         </div>
     </div>
@@ -652,6 +592,47 @@
             }
         }
 
+        function renderAd(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = `
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-6348535052118886"
+                     data-ad-slot="2330968069"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+            `;
+            try {
+                (adsbygoogle = window.adsbygoogle || []).push({});
+            } catch (e) {}
+        }
+
+        function clearAds() {
+            [
+                'ad-container-news-top', 'ad-container-news-bottom',
+                'ad-container-papers-top', 'ad-container-papers-bottom',
+                'ad-container-videos-top', 'ad-container-videos-bottom'
+            ].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = '';
+            });
+        }
+
+        function renderAdsForPage(page) {
+            clearAds();
+            if (page === 'news') {
+                renderAd('ad-container-news-top');
+                renderAd('ad-container-news-bottom');
+            } else if (page === 'papers') {
+                renderAd('ad-container-papers-top');
+                renderAd('ad-container-papers-bottom');
+            } else if (page === 'videos') {
+                renderAd('ad-container-videos-top');
+                renderAd('ad-container-videos-bottom');
+            }
+        }
+
         // Navigation
         document.querySelectorAll('.nav a').forEach(link => {
             link.addEventListener('click', (e) => {
@@ -669,20 +650,19 @@
                 // Load content
                 loadContent(page);
 
-                // Reload AdSense ads in the now-visible page
+                // Dynamically render ads for the visible page
                 setTimeout(() => {
-                  document.querySelectorAll(`#${page}-page .adsbygoogle`).forEach(ins => {
-                    try {
-                      (adsbygoogle = window.adsbygoogle || []).push({});
-                    } catch (e) {}
-                  });
+                  renderAdsForPage(page);
                 }, 100);
             });
         });
 
-        // Load initial data
+        // On initial load, render ads for news page
         window.addEventListener('load', () => {
             loadContent('news');
+            setTimeout(() => {
+                renderAdsForPage('news');
+            }, 100);
         });
 
         async function summarizeContent(type, id, content) {
