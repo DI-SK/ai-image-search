@@ -404,25 +404,36 @@ function generateSummary(text, type) {
   // Split text into sentences
   const sentences = text.match(/[^.!?]+[.!?]+/g) || [];
   
-  // Create word frequency map
+  // Create word frequency map, excluding common words
+  const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'as', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'shall', 'should', 'can', 'could', 'may', 'might', 'must', 'this', 'that', 'these', 'those', 'it', 'its', 'they', 'them', 'their', 'there', 'here', 'where', 'when', 'why', 'how', 'what', 'which', 'who', 'whom', 'whose']);
+  
   const wordFreq = {};
   const words = text.toLowerCase().match(/\b\w+\b/g) || [];
   words.forEach(word => {
-    wordFreq[word] = (wordFreq[word] || 0) + 1;
+    if (!stopWords.has(word)) {
+      wordFreq[word] = (wordFreq[word] || 0) + 1;
+    }
   });
 
-  // Score sentences based on word frequency
-  const sentenceScores = sentences.map(sentence => {
+  // Score sentences based on word frequency and position
+  const sentenceScores = sentences.map((sentence, index) => {
     const sentenceWords = sentence.toLowerCase().match(/\b\w+\b/g) || [];
     const score = sentenceWords.reduce((sum, word) => sum + (wordFreq[word] || 0), 0);
-    return { sentence, score };
+    
+    // Give higher weight to sentences at the beginning
+    const positionWeight = 1 - (index / sentences.length);
+    
+    return { 
+      sentence: sentence.trim(),
+      score: score * (1 + positionWeight)
+    };
   });
 
-  // Sort sentences by score and take top 3
+  // Sort sentences by score and take top 2-3
   const topSentences = sentenceScores
     .sort((a, b) => b.score - a.score)
     .slice(0, 3)
-    .map(item => item.sentence.trim());
+    .map(item => item.sentence);
 
   // Join sentences and add context based on type
   let summary = topSentences.join(' ');
@@ -430,13 +441,13 @@ function generateSummary(text, type) {
   // Add type-specific context
   switch(type) {
     case 'news':
-      summary = `News Summary: ${summary}`;
+      summary = `Key Points: ${summary}`;
       break;
     case 'paper':
-      summary = `Research Summary: ${summary}`;
+      summary = `Research Highlights: ${summary}`;
       break;
     case 'video':
-      summary = `Video Summary: ${summary}`;
+      summary = `Video Overview: ${summary}`;
       break;
   }
 
