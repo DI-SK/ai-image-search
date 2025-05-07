@@ -1,17 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="AI Trending Now - Latest AI News, Videos, and Research"
-    />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Trending Now</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .news-item, .video-item, .paper-item {
+            border-bottom: 1px solid #eee;
+            padding: 15px 0;
+        }
+        .news-item:last-child, .video-item:last-child, .paper-item:last-child {
+            border-bottom: none;
+        }
+        a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        .error {
+            color: #d32f2f;
+            padding: 10px;
+            background: #ffebee;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
+    <h1>AI Trending Now</h1>
+    
+    <div class="container">
+        <h2>Latest AI News</h2>
+        <div id="news"></div>
+    </div>
+
+    <div class="container">
+        <h2>AI Research Papers</h2>
+        <div id="papers"></div>
+    </div>
+
+    <div class="container">
+        <h2>AI Videos</h2>
+        <div id="videos"></div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+
+        async function fetchData(endpoint) {
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error('Error:', error);
+                return null;
+            }
+        }
+
+        function createNewsItem(article) {
+            return `
+                <div class="news-item">
+                    <h3><a href="${article.url}" target="_blank">${article.title}</a></h3>
+                    <p>${article.description}</p>
+                    <small>Published: ${new Date(article.publishedAt).toLocaleDateString()}</small>
+                </div>
+            `;
+        }
+
+        function createPaperItem(paper) {
+            return `
+                <div class="paper-item">
+                    <h3><a href="${paper.url}" target="_blank">${paper.title}</a></h3>
+                    <p>${paper.abstract.substring(0, 200)}...</p>
+                    <small>Authors: ${paper.authors.join(', ')}</small>
+                    <br>
+                    <small>Published: ${new Date(paper.published).toLocaleDateString()}</small>
+                </div>
+            `;
+        }
+
+        function createVideoItem(video) {
+            return `
+                <div class="video-item">
+                    <h3><a href="https://www.youtube.com/watch?v=${video.id.videoId}" target="_blank">${video.snippet.title}</a></h3>
+                    <p>${video.snippet.description}</p>
+                    <small>Published: ${new Date(video.snippet.publishedAt).toLocaleDateString()}</small>
+                </div>
+            `;
+        }
+
+        async function loadNews() {
+            const newsDiv = document.getElementById('news');
+            newsDiv.innerHTML = '<div class="loading">Loading news...</div>';
+            
+            const data = await fetchData('/api/news');
+            if (data && data.articles) {
+                newsDiv.innerHTML = data.articles.map(createNewsItem).join('');
+            } else {
+                newsDiv.innerHTML = '<div class="error">Failed to load news</div>';
+            }
+        }
+
+        async function loadPapers() {
+            const papersDiv = document.getElementById('papers');
+            papersDiv.innerHTML = '<div class="loading">Loading papers...</div>';
+            
+            const data = await fetchData('/api/papers');
+            if (data && data.papers) {
+                papersDiv.innerHTML = data.papers.map(createPaperItem).join('');
+            } else {
+                papersDiv.innerHTML = '<div class="error">Failed to load papers</div>';
+            }
+        }
+
+        async function loadVideos() {
+            const videosDiv = document.getElementById('videos');
+            videosDiv.innerHTML = '<div class="loading">Loading videos...</div>';
+            
+            const data = await fetchData('/api/videos');
+            if (data && data.items) {
+                videosDiv.innerHTML = data.items.map(createVideoItem).join('');
+            } else {
+                videosDiv.innerHTML = '<div class="error">Failed to load videos</div>';
+            }
+        }
+
+        // Load all data when page loads
+        window.addEventListener('load', () => {
+            loadNews();
+            loadPapers();
+            loadVideos();
+        });
+    </script>
   </body>
 </html> 
