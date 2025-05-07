@@ -3,18 +3,7 @@ services:
     name: ai-trending-now
     env: node
     buildCommand: |
-      #!/bin/bash
-      set -e
-      echo "Cleaning up..."
-      rm -rf node_modules
-      rm -rf build
-      echo "Installing dependencies..."
       npm install
-      echo "Building React app..."
-      export CI=false
-      npm run build
-      echo "Build directory contents:"
-      ls -la build/
     startCommand: node server.js
     envVars:
       - key: NODE_ENV
