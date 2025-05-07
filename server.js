@@ -401,7 +401,7 @@ try {
 
 // Add rate limiting for OpenAI
 const openAIRateLimit = {
-  requestsPerMinute: 3,
+  requestsPerMinute: 10,
   requests: [],
   lastReset: new Date()
 };
@@ -422,6 +422,10 @@ function checkOpenAIRateLimit() {
   
   // Check if we're under the limit
   if (openAIRateLimit.requests.length >= openAIRateLimit.requestsPerMinute) {
+    console.log('OpenAI rate limit reached:', {
+      requestsInLastMinute: openAIRateLimit.requests.length,
+      limit: openAIRateLimit.requestsPerMinute
+    });
     return false;
   }
   
@@ -446,12 +450,13 @@ app.post('/api/summarize', async (req, res) => {
   
   // Check cache first
   if (summaryCache[cacheKey]) {
-    console.log('Using cached summary');
+    console.log('Using cached summary for:', type);
     return res.json({ summary: summaryCache[cacheKey], fromCache: true });
   }
 
   // Check rate limit
   if (!checkOpenAIRateLimit()) {
+    console.log('Rate limit exceeded, returning 429');
     return res.status(429).json({ 
       error: 'Rate limit exceeded. Please try again in a minute.',
       retryAfter: 60
@@ -459,6 +464,7 @@ app.post('/api/summarize', async (req, res) => {
   }
 
   try {
+    console.log('Generating new summary for:', type);
     const prompt = `Summarize this ${type} in a concise way:\n\n${content}`;
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -484,13 +490,20 @@ app.post('/api/summarize', async (req, res) => {
     });
 
     if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('OpenAI API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData
+      });
+
       if (response.status === 429) {
         return res.status(429).json({ 
           error: 'OpenAI rate limit exceeded. Please try again in a minute.',
           retryAfter: 60
         });
       }
-      throw new Error(`OpenAI API responded with status: ${response.status}`);
+      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
@@ -500,10 +513,11 @@ app.post('/api/summarize', async (req, res) => {
     summaryCache[cacheKey] = summary;
     fs.writeFileSync(SUMMARY_CACHE_FILE, JSON.stringify(summaryCache));
     
+    console.log('Successfully generated and cached summary for:', type);
     res.json({ summary, fromCache: false });
   } catch (error) {
-    console.error('Summary generation error:', error.message);
-    res.status(500).json({ error: 'Failed to generate summary' });
+    console.error('Summary generation error:', error);
+    res.status(500).json({ error: 'Failed to generate summary: ' + error.message });
   }
 });
 

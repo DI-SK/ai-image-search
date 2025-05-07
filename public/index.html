@@ -576,8 +576,9 @@
             summaryDiv.style.display = 'block';
             summaryDiv.innerHTML = '<div class="loading">Generating summary...</div>';
 
+            let response;
             try {
-                const response = await fetch(`${API_BASE}/api/summarize`, {
+                response = await fetch(`${API_BASE}/api/summarize`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -621,8 +622,9 @@
                     <p>${error.message}</p>
                 `;
                 button.textContent = 'Try Again';
+                button.disabled = false;
             } finally {
-                if (response.status !== 429) {
+                if (response && response.status !== 429) {
                     button.disabled = false;
                 }
             }
