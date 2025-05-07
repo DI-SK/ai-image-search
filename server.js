@@ -69,6 +69,13 @@ app.get('/api/news', async (req, res) => {
     }
     const data = await response.json();
     let articles = (data.articles && data.articles.length > 0) ? data.articles : [];
+    
+    // Ensure each article has an image URL
+    articles = articles.map(article => ({
+      ...article,
+      image: article.image || article.urlToImage || `https://picsum.photos/200/120?random=${Math.random()}`
+    }));
+
     if (articles.length > 0) {
       cachedNews = articles;
       fs.writeFileSync(NEWS_CACHE_FILE, JSON.stringify(cachedNews));

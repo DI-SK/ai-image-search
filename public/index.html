@@ -12,6 +12,30 @@
             padding: 20px;
             background: #f5f5f5;
         }
+        .nav {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav a {
+            color: #333;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+        .nav a:hover {
+            background: #f0f0f0;
+        }
+        .nav a.active {
+            background: #0066cc;
+            color: white;
+        }
         .container {
             background: white;
             padding: 20px;
@@ -25,9 +49,20 @@
         .news-item, .video-item, .paper-item {
             border-bottom: 1px solid #eee;
             padding: 15px 0;
+            display: flex;
+            gap: 20px;
         }
         .news-item:last-child, .video-item:last-child, .paper-item:last-child {
             border-bottom: none;
+        }
+        .thumbnail {
+            width: 200px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        .content {
+            flex: 1;
         }
         a {
             color: #0066cc;
@@ -48,28 +83,102 @@
             border-radius: 4px;
             margin: 10px 0;
         }
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .pagination button {
+            padding: 8px 16px;
+            border: none;
+            background: #0066cc;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .pagination button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
     </style>
   </head>
   <body>
-    <h1>AI Trending Now</h1>
+    <div class="nav">
+        <h1>AI Trending Now</h1>
+        <div>
+            <a href="#" class="active" data-page="news">News</a>
+            <a href="#" data-page="papers">Research</a>
+            <a href="#" data-page="videos">Videos</a>
+        </div>
+    </div>
     
-    <div class="container">
-        <h2>Latest AI News</h2>
-        <div id="news"></div>
+    <div id="news-page" class="page active">
+        <div class="container">
+            <h2>Latest AI News</h2>
+            <div id="news"></div>
+            <div class="pagination" id="news-pagination"></div>
+        </div>
     </div>
 
-    <div class="container">
-        <h2>AI Research Papers</h2>
-        <div id="papers"></div>
+    <div id="papers-page" class="page">
+        <div class="container">
+            <h2>AI Research Papers</h2>
+            <div id="papers"></div>
+            <div class="pagination" id="papers-pagination"></div>
+        </div>
     </div>
 
-    <div class="container">
-        <h2>AI Videos</h2>
-        <div id="videos"></div>
+    <div id="videos-page" class="page">
+        <div class="container">
+            <h2>AI Videos</h2>
+            <div id="videos"></div>
+            <div class="pagination" id="videos-pagination"></div>
+        </div>
     </div>
 
     <script>
         const API_BASE = window.location.origin;
+        const ITEMS_PER_PAGE = 5;
+        let currentPage = {
+            news: 1,
+            papers: 1,
+            videos: 1
+        };
+        let allData = {
+            news: [],
+            papers: [],
+            videos: []
+        };
+
+        // Navigation
+        document.querySelectorAll('.nav a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = e.target.dataset.page;
+                
+                // Update active state
+                document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                // Show selected page
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById(`${page}-page`).classList.add('active');
+                
+                // Load data if not already loaded
+                if (allData[page].length === 0) {
+                    if (page === 'news') loadNews();
+                    else if (page === 'papers') loadPapers();
+                    else if (page === 'videos') loadVideos();
+                }
+            });
+        });
 
         async function fetchData(endpoint) {
             try {
@@ -83,35 +192,87 @@
         }
 
         function createNewsItem(article) {
+            console.log('News article:', article); // Debug log
+            const imageUrl = article.image || article.urlToImage || `https://picsum.photos/200/120?random=${Math.random()}`;
             return `
                 <div class="news-item">
-                    <h3><a href="${article.url}" target="_blank">${article.title}</a></h3>
-                    <p>${article.description}</p>
-                    <small>Published: ${new Date(article.publishedAt).toLocaleDateString()}</small>
+                    <img src="${imageUrl}" alt="${article.title}" class="thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=No+Image'">
+                    <div class="content">
+                        <h3><a href="${article.url}" target="_blank">${article.title}</a></h3>
+                        <p>${article.description}</p>
+                        <small>Published: ${new Date(article.publishedAt).toLocaleDateString()}</small>
+                    </div>
                 </div>
             `;
         }
 
         function createPaperItem(paper) {
+            console.log('Paper:', paper); // Debug log
             return `
                 <div class="paper-item">
-                    <h3><a href="${paper.url}" target="_blank">${paper.title}</a></h3>
-                    <p>${paper.abstract.substring(0, 200)}...</p>
-                    <small>Authors: ${paper.authors.join(', ')}</small>
-                    <br>
-                    <small>Published: ${new Date(paper.published).toLocaleDateString()}</small>
+                    <img src="https://picsum.photos/200/120?random=${Math.random()}" alt="Research Paper" class="thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Research'">
+                    <div class="content">
+                        <h3><a href="${paper.url}" target="_blank">${paper.title}</a></h3>
+                        <p>${paper.abstract.substring(0, 200)}...</p>
+                        <small>Authors: ${paper.authors.join(', ')}</small>
+                        <br>
+                        <small>Published: ${new Date(paper.published).toLocaleDateString()}</small>
+                    </div>
                 </div>
             `;
         }
 
         function createVideoItem(video) {
+            console.log('Video:', video); // Debug log
+            const thumbnailUrl = video.snippet?.thumbnails?.high?.url || 
+                               video.snippet?.thumbnails?.medium?.url || 
+                               video.snippet?.thumbnails?.default?.url || 
+                               `https://picsum.photos/200/120?random=${Math.random()}`;
             return `
                 <div class="video-item">
-                    <h3><a href="https://www.youtube.com/watch?v=${video.id.videoId}" target="_blank">${video.snippet.title}</a></h3>
-                    <p>${video.snippet.description}</p>
-                    <small>Published: ${new Date(video.snippet.publishedAt).toLocaleDateString()}</small>
+                    <img src="${thumbnailUrl}" alt="${video.snippet.title}" class="thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=No+Thumbnail'">
+                    <div class="content">
+                        <h3><a href="https://www.youtube.com/watch?v=${video.id.videoId}" target="_blank">${video.snippet.title}</a></h3>
+                        <p>${video.snippet.description}</p>
+                        <small>Published: ${new Date(video.snippet.publishedAt).toLocaleDateString()}</small>
+                    </div>
                 </div>
             `;
+        }
+
+        function updatePagination(type, totalItems) {
+            const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+            const pagination = document.getElementById(`${type}-pagination`);
+            pagination.innerHTML = `
+                <button onclick="changePage('${type}', ${currentPage[type] - 1})" 
+                        ${currentPage[type] === 1 ? 'disabled' : ''}>Previous</button>
+                <span>Page ${currentPage[type]} of ${totalPages}</span>
+                <button onclick="changePage('${type}', ${currentPage[type] + 1})"
+                        ${currentPage[type] === totalPages ? 'disabled' : ''}>Next</button>
+            `;
+        }
+
+        function changePage(type, page) {
+            if (page < 1 || page > Math.ceil(allData[type].length / ITEMS_PER_PAGE)) return;
+            currentPage[type] = page;
+            displayItems(type);
+        }
+
+        function displayItems(type) {
+            const start = (currentPage[type] - 1) * ITEMS_PER_PAGE;
+            const end = start + ITEMS_PER_PAGE;
+            const items = allData[type].slice(start, end);
+            
+            const container = document.getElementById(type);
+            if (type === 'news') {
+                container.innerHTML = items.map(createNewsItem).join('');
+            } else if (type === 'papers') {
+                container.innerHTML = items.map(createPaperItem).join('');
+            } else if (type === 'videos') {
+                container.innerHTML = items.map(createVideoItem).join('');
+            }
+            
+            updatePagination(type, allData[type].length);
         }
 
         async function loadNews() {
@@ -120,7 +281,8 @@
             
             const data = await fetchData('/api/news');
             if (data && data.articles) {
-                newsDiv.innerHTML = data.articles.map(createNewsItem).join('');
+                allData.news = data.articles;
+                displayItems('news');
             } else {
                 newsDiv.innerHTML = '<div class="error">Failed to load news</div>';
             }
@@ -132,7 +294,8 @@
             
             const data = await fetchData('/api/papers');
             if (data && data.papers) {
-                papersDiv.innerHTML = data.papers.map(createPaperItem).join('');
+                allData.papers = data.papers;
+                displayItems('papers');
             } else {
                 papersDiv.innerHTML = '<div class="error">Failed to load papers</div>';
             }
@@ -144,17 +307,16 @@
             
             const data = await fetchData('/api/videos');
             if (data && data.items) {
-                videosDiv.innerHTML = data.items.map(createVideoItem).join('');
+                allData.videos = data.items;
+                displayItems('videos');
             } else {
                 videosDiv.innerHTML = '<div class="error">Failed to load videos</div>';
             }
         }
 
-        // Load all data when page loads
+        // Load initial data
         window.addEventListener('load', () => {
             loadNews();
-            loadPapers();
-            loadVideos();
         });
     </script>
   </body>
