@@ -401,8 +401,9 @@ try {
 
 // Simple text summarization function
 function generateSummary(text, type) {
-  // Split text into sentences
+  // Split text into sentences and clean them
   const sentences = text.match(/[^.!?]+[.!?]+/g) || [];
+  const cleanSentences = sentences.map(s => s.trim()).filter(s => s.length > 0);
   
   // Create word frequency map, excluding common words
   const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'as', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'shall', 'should', 'can', 'could', 'may', 'might', 'must', 'this', 'that', 'these', 'those', 'it', 'its', 'they', 'them', 'their', 'there', 'here', 'where', 'when', 'why', 'how', 'what', 'which', 'who', 'whom', 'whose']);
@@ -416,16 +417,19 @@ function generateSummary(text, type) {
   });
 
   // Score sentences based on word frequency and position
-  const sentenceScores = sentences.map((sentence, index) => {
+  const sentenceScores = cleanSentences.map((sentence, index) => {
     const sentenceWords = sentence.toLowerCase().match(/\b\w+\b/g) || [];
     const score = sentenceWords.reduce((sum, word) => sum + (wordFreq[word] || 0), 0);
     
     // Give higher weight to sentences at the beginning
-    const positionWeight = 1 - (index / sentences.length);
+    const positionWeight = 1 - (index / cleanSentences.length);
+    
+    // Give higher weight to longer sentences (but not too long)
+    const lengthWeight = Math.min(sentenceWords.length / 20, 1);
     
     return { 
       sentence: sentence.trim(),
-      score: score * (1 + positionWeight)
+      score: score * (1 + positionWeight) * (1 + lengthWeight)
     };
   });
 

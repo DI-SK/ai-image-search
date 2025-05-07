@@ -497,6 +497,7 @@
             const imageUrl = article.image || article.urlToImage || `https://picsum.photos/200/120?random=${Math.random()}`;
             const safeTitle = article.title.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
             const safeDescription = article.description.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            const safeContent = `${safeTitle}. ${safeDescription}`;
             return `
                 <div class="news-item">
                     <img src="${imageUrl}" alt="${safeTitle}" class="thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=No+Image'">
@@ -504,7 +505,7 @@
                         <h3><a href="${article.url}" target="_blank">${safeTitle}</a></h3>
                         <p>${safeDescription}</p>
                         <small>Published: ${new Date(article.publishedAt).toLocaleDateString()}</small>
-                        <button class="summary-button" onclick="summarizeContent('news', '${safeTitle}', '${safeDescription}')">
+                        <button class="summary-button" onclick="summarizeContent('news', '${safeTitle}', '${safeContent}')">
                             Summarize
                         </button>
                         <div id="summary-news-${safeTitle.replace(/[^a-z0-9]/gi, '-').toLowerCase()}" class="summary" style="display: none;"></div>
@@ -517,6 +518,7 @@
             console.log('Paper:', paper); // Debug log
             const safeTitle = paper.title.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
             const safeAbstract = paper.abstract.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            const safeContent = `${safeTitle}. ${safeAbstract}`;
             return `
                 <div class="paper-item">
                     <img src="https://picsum.photos/200/120?random=${Math.random()}" alt="Research Paper" class="thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=Research'">
@@ -526,7 +528,7 @@
                         <small>Authors: ${paper.authors.join(', ')}</small>
                         <br>
                         <small>Published: ${new Date(paper.published).toLocaleDateString()}</small>
-                        <button class="summary-button" onclick="summarizeContent('paper', '${safeTitle}', '${safeAbstract}')">
+                        <button class="summary-button" onclick="summarizeContent('paper', '${safeTitle}', '${safeContent}')">
                             Summarize
                         </button>
                         <div id="summary-paper-${safeTitle.replace(/[^a-z0-9]/gi, '-').toLowerCase()}" class="summary" style="display: none;"></div>
@@ -544,6 +546,7 @@
             
             const safeTitle = video.snippet.title.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
             const safeDescription = video.snippet.description.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            const safeContent = `${safeTitle}. ${safeDescription}`;
             
             // Calculate days ago
             const publishedAt = new Date(video.snippet.publishedAt);
@@ -560,7 +563,7 @@
                         <h3><a href="https://www.youtube.com/watch?v=${video.id.videoId}" target="_blank">${safeTitle}</a></h3>
                         <p>${safeDescription}</p>
                         <small>Published: ${timeAgo}</small>
-                        <button class="summary-button" onclick="summarizeContent('video', '${safeTitle}', '${safeDescription}')">
+                        <button class="summary-button" onclick="summarizeContent('video', '${safeTitle}', '${safeContent}')">
                             Summarize
                         </button>
                         <div id="summary-video-${safeTitle.replace(/[^a-z0-9]/gi, '-').toLowerCase()}" class="summary" style="display: none;"></div>
