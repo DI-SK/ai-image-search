@@ -496,6 +496,18 @@ app.post('/api/summarize', async (req, res) => {
   }
 });
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  const status = {
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    environment: process.env.NODE_ENV
+  };
+  res.json(status);
+});
+
 // Cache status endpoint
 app.get('/api/cache-status', (req, res) => {
   const now = new Date();
