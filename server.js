@@ -163,7 +163,7 @@ app.get('/api/news', async (req, res) => {
   }
 
   const page = parseInt(req.query.page) || 1;
-  const pageSize = 10;
+  const pageSize = 5;
   const startIndex = (page - 1) * pageSize;
   const endIndex = startIndex + pageSize;
 
@@ -240,7 +240,7 @@ app.get('/api/videos', async (req, res) => {
   }
 
   const page = parseInt(req.query.page) || 1;
-  const pageSize = 10;
+  const pageSize = 5;
   const startIndex = (page - 1) * pageSize;
   const endIndex = startIndex + pageSize;
 
