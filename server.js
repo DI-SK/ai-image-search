@@ -98,6 +98,11 @@ console.log('Cache Status:', {
 
 // Helper function to check if cache needs update
 function needsUpdate(type) {
+  // Temporarily force cache refresh
+  return true;
+  
+  // Original code commented out
+  /*
   const lastUpdate = cacheMetadata[type].lastUpdate;
   if (!lastUpdate) return true;
   
@@ -107,6 +112,7 @@ function needsUpdate(type) {
   
   // Update if more than 1 hour old
   return hoursSinceUpdate >= 1;
+  */
 }
 
 // Helper function to save cache metadata
