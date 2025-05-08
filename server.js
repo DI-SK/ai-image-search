@@ -498,14 +498,16 @@ app.post('/api/summarize', async (req, res) => {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  const status = {
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    memory: process.memoryUsage(),
-    environment: process.env.NODE_ENV
-  };
-  res.json(status);
+  // Basic security check - only allow GET requests
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Simple response to minimize bandwidth
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Cache status endpoint
