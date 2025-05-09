@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reviews - AI Trending Now</title>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            background: #0f172a;
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+            background-image: 
+                radial-gradient(circle at 100% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 0% 100%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .review-form {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .review-form h2 {
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .form-group input[type="text"],
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .star-rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-start;
+            gap: 5px;
+        }
+
+        .star-rating input {
+            display: none;
+        }
+
+        .star-rating label {
+            cursor: pointer;
+            font-size: 30px;
+            color: #ddd;
+            padding: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .star-rating label:hover,
+        .star-rating label:hover ~ label,
+        .star-rating input:checked ~ label {
+            color: #ffd700;
+        }
+
+        .submit-button {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .reviews-container {
+            margin-top: 30px;
+        }
+
+        .review-item {
+            background: var(--glass-bg);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .review-author {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .review-date {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .review-rating {
+            color: #ffd700;
+            margin: 10px 0;
+            font-size: 1.2rem;
+        }
+
+        .review-text {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .pagination button {
+            padding: 10px 20px;
+            border: none;
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid var(--glass-border);
+            min-width: 40px;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: var(--primary-gradient);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .pagination button:disabled {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            cursor: not-allowed;
+        }
+
+        .pagination button.active {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .page-info {
+            text-align: center;
+            color: var(--text-secondary);
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .error {
+            color: #ef4444;
+            padding: 15px;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .review-form {
+                padding: 15px;
+            }
+
+            .star-rating label {
+                font-size: 24px;
+            }
+
+            .review-item {
+                padding: 15px;
+            }
+
+            .review-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+
+            .pagination {
+                gap: 5px;
+            }
+
+            .pagination button {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="review-form">
+            <h2>Share Your Experience</h2>
+            <form id="reviewForm">
+                <div class="form-group">
+                    <label for="reviewName">Name</label>
+                    <input type="text" id="reviewName" required placeholder="Your name">
+                </div>
+                <div class="form-group">
+                    <label for="reviewRating">Rating</label>
+                    <div class="star-rating">
+                        <input type="radio" id="star5" name="rating" value="5" required />
+                        <label for="star5">★</label>
+                        <input type="radio" id="star4" name="rating" value="4" />
+                        <label for="star4">★</label>
+                        <input type="radio" id="star3" name="rating" value="3" />
+                        <label for="star3">★</label>
+                        <input type="radio" id="star2" name="rating" value="2" />
+                        <label for="star2">★</label>
+                        <input type="radio" id="star1" name="rating" value="1" />
+                        <label for="star1">★</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="reviewText">Review</label>
+                    <textarea id="reviewText" required placeholder="Share your thoughts about our AI news aggregator..."></textarea>
+                </div>
+                <button type="submit" class="submit-button">Submit Review</button>
+            </form>
+        </div>
+
+        <div id="reviews" class="reviews-container"></div>
+        <div class="pagination" id="reviews-pagination"></div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        const ITEMS_PER_PAGE = 10;
+        const TOTAL_PAGES = 5;
+        let currentPage = 1;
+
+        async function fetchReviews(page = 1) {
+            try {
+                const response = await fetch(`${API_BASE}/api/reviews?page=${page}`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error('Error:', error);
+                return null;
+            }
+        }
+
+        function createReviewItem(review) {
+            const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+            return `
+                <div class="review-item">
+                    <div class="review-header">
+                        <span class="review-author">${review.name}</span>
+                        <span class="review-date">${new Date(review.date).toLocaleDateString()}</span>
+                    </div>
+                    <div class="review-rating">${stars}</div>
+                    <p class="review-text">${review.text}</p>
+                </div>
+            `;
+        }
+
+        function updatePagination(currentPage) {
+            const pagination = document.getElementById('reviews-pagination');
+            let paginationHtml = '';
+            
+            // Previous button
+            paginationHtml += `
+                <button onclick="changePage(${currentPage - 1})" 
+                        ${currentPage === 1 ? 'disabled' : ''}>Previous</button>
+            `;
+            
+            // Page numbers
+            for (let i = 1; i <= TOTAL_PAGES; i++) {
+                paginationHtml += `
+                    <button onclick="changePage(${i})" 
+                            ${i === currentPage ? 'class="active"' : ''}>${i}</button>
+                `;
+            }
+            
+            // Next button
+            paginationHtml += `
+                <button onclick="changePage(${currentPage + 1})"
+                        ${currentPage === TOTAL_PAGES ? 'disabled' : ''}>Next</button>
+            `;
+            
+            pagination.innerHTML = paginationHtml;
+        }
+
+        async function loadReviews() {
+            const container = document.getElementById('reviews');
+            container.innerHTML = '<div class="loading">Loading reviews...</div>';
+            
+            try {
+                const data = await fetchReviews(currentPage);
+                if (!data) {
+                    container.innerHTML = '<div class="error">Failed to load reviews</div>';
+                    return;
+                }
+
+                // Add page info
+                const startItem = (currentPage - 1) * ITEMS_PER_PAGE + 1;
+                const endItem = Math.min(currentPage * ITEMS_PER_PAGE, TOTAL_PAGES * ITEMS_PER_PAGE);
+                const pageInfo = document.createElement('div');
+                pageInfo.className = 'page-info';
+                pageInfo.textContent = `Showing reviews ${startItem}-${endItem} of ${TOTAL_PAGES * ITEMS_PER_PAGE}`;
+                container.parentNode.insertBefore(pageInfo, container);
+
+                const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+                const endIndex = startIndex + ITEMS_PER_PAGE;
+                const pageReviews = data.reviews.slice(startIndex, endIndex);
+                container.innerHTML = pageReviews.map(createReviewItem).join('');
+                updatePagination(currentPage);
+            } catch (error) {
+                console.error('Error loading reviews:', error);
+                container.innerHTML = '<div class="error">Failed to load reviews. Please try again.</div>';
+            }
+        }
+
+        function changePage(page) {
+            if (page < 1 || page > TOTAL_PAGES) return;
+            currentPage = page;
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+            loadReviews();
+        }
+
+        // Handle form submission
+        document.getElementById('reviewForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const review = {
+                name: document.getElementById('reviewName').value,
+                rating: document.querySelector('input[name="rating"]:checked').value,
+                text: document.getElementById('reviewText').value,
+                date: new Date().toISOString()
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/reviews`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(review)
+                });
+
+                if (!response.ok) throw new Error('Failed to submit review');
+
+                // Clear form
+                e.target.reset();
+                
+                // Reload reviews
+                loadReviews();
+                
+                // Show success message
+                alert('Thank you for your review!');
+            } catch (error) {
+                console.error('Review submission error:', error);
+                alert('Failed to submit review. Please try again.');
+            }
+        });
+
+        // Load reviews on page load
+        window.addEventListener('load', loadReviews);
+    </script>
+</body>
+</html> 

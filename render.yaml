@@ -2,17 +2,18 @@ services:
   - type: web
     name: ai-trending-now
     env: node
-    buildCommand: |
-      npm install
+    buildCommand: npm install
     startCommand: node server.js
     envVars:
       - key: NODE_ENV
         value: production
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
       - key: GNEWS_API_KEY
         sync: false
       - key: YT_API_KEY
-        sync: false
-      - key: OPENAI_API_KEY
         sync: false
     nodeVersion: 18.x
     healthCheckPath: /api/news

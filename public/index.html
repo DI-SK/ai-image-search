@@ -212,6 +212,20 @@
             padding: 40px;
             color: var(--text-secondary);
             font-size: 1.1rem;
+            position: relative;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid var(--primary-gradient);
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
         }
 
         .error {
@@ -226,8 +240,9 @@
         .pagination {
             display: flex;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
             margin-top: 30px;
+            flex-wrap: wrap;
         }
 
         .pagination button {
@@ -239,17 +254,24 @@
             cursor: pointer;
             transition: all 0.3s ease;
             border: 1px solid var(--glass-border);
+            min-width: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .pagination button:hover:not(:disabled) {
             background: var(--primary-gradient);
             transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
         }
 
         .pagination button:disabled {
             background: rgba(255, 255, 255, 0.05);
             color: var(--text-secondary);
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
         .pagination button.active {
@@ -258,44 +280,65 @@
             box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
         }
 
-        .pagination span {
+        .page-info {
+            text-align: center;
             color: var(--text-secondary);
-            padding: 10px 20px;
+            margin: 20px 0;
+            font-size: 0.9rem;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
         }
 
-        .page {
-            display: none;
-            animation: fadeIn 0.5s ease;
+        .loading-overlay.active {
+            opacity: 1;
+            visibility: visible;
         }
 
-        .page.active {
-            display: block;
-        }
-
-        /* Loading animation */
-        .loading::after {
-            content: '';
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--text-secondary);
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--primary-gradient);
             border-radius: 50%;
             border-top-color: transparent;
             animation: spin 1s linear infinite;
-            margin-left: 10px;
-            vertical-align: middle;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
-        /* Responsive design */
+        /* Page Transition Animation */
+        .page-transition {
+            animation: fadeSlide 0.3s ease;
+        }
+
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile Optimization for Pagination */
         @media (max-width: 768px) {
             .nav {
                 flex-direction: column;
@@ -314,6 +357,15 @@
             .thumbnail {
                 width: 100%;
                 height: 200px;
+            }
+
+            .pagination {
+                gap: 5px;
+            }
+
+            .pagination button {
+                padding: 8px 12px;
+                font-size: 0.9rem;
             }
         }
 
@@ -424,6 +476,159 @@
                 min-height: 60px;
             }
         }
+
+        /* Review Form Styles */
+        .review-form {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .review-form h3 {
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .form-group input[type="text"],
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .star-rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-start;
+            gap: 5px;
+        }
+
+        .star-rating input {
+            display: none;
+        }
+
+        .star-rating label {
+            cursor: pointer;
+            font-size: 30px;
+            color: #ddd;
+            padding: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .star-rating label:hover,
+        .star-rating label:hover ~ label,
+        .star-rating input:checked ~ label {
+            color: #ffd700;
+        }
+
+        .submit-button {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Review Item Styles */
+        .review-item {
+            background: var(--glass-bg);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .review-author {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .review-date {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .review-rating {
+            color: #ffd700;
+            margin: 10px 0;
+            font-size: 1.2rem;
+        }
+
+        .review-text {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Mobile Optimization for Reviews */
+        @media (max-width: 768px) {
+            .review-form {
+                padding: 15px;
+            }
+
+            .star-rating label {
+                font-size: 24px;
+            }
+
+            .review-item {
+                padding: 15px;
+            }
+
+            .review-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+        }
     </style>
     <!-- Add Google AdSense script -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6348535052118886"
@@ -436,6 +641,7 @@
             <a href="#" class="active" data-page="news">News</a>
             <a href="#" data-page="papers">Research</a>
             <a href="#" data-page="videos">Videos</a>
+            <a href="#" data-page="reviews">Reviews</a>
         </div>
     </div>
     
@@ -475,9 +681,52 @@
         </div>
     </div>
 
+    <div id="reviews-page" class="page">
+        <div class="container">
+            <h2>User Reviews</h2>
+            <div class="review-form">
+                <h3>Share Your Experience</h3>
+                <form id="reviewForm">
+                    <div class="form-group">
+                        <label for="reviewName">Name</label>
+                        <input type="text" id="reviewName" required placeholder="Your name">
+                    </div>
+                    <div class="form-group">
+                        <label for="reviewRating">Rating</label>
+                        <div class="star-rating">
+                            <input type="radio" id="star5" name="rating" value="5" required />
+                            <label for="star5">★</label>
+                            <input type="radio" id="star4" name="rating" value="4" />
+                            <label for="star4">★</label>
+                            <input type="radio" id="star3" name="rating" value="3" />
+                            <label for="star3">★</label>
+                            <input type="radio" id="star2" name="rating" value="2" />
+                            <label for="star2">★</label>
+                            <input type="radio" id="star1" name="rating" value="1" />
+                            <label for="star1">★</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="reviewText">Review</label>
+                        <textarea id="reviewText" required placeholder="Share your thoughts about our AI news aggregator..."></textarea>
+                    </div>
+                    <button type="submit" class="submit-button">Submit Review</button>
+                </form>
+            </div>
+            <div id="reviews" class="reviews-container"></div>
+            <div class="pagination" id="reviews-pagination"></div>
+        </div>
+    </div>
+
+    <!-- Add loading overlay -->
+    <div class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
     <script>
         const API_BASE = window.location.origin;
-        const ITEMS_PER_PAGE = 5;
+        const ITEMS_PER_PAGE = 10;
+        const TOTAL_PAGES = 5;
         let currentPage = {
             news: 1,
             papers: 1,
@@ -614,7 +863,7 @@
             `;
         }
 
-        function updatePagination(type, totalPages, currentPage) {
+        function updatePagination(type, currentPage) {
             const pagination = document.getElementById(`${type}-pagination`);
             let paginationHtml = '';
             
@@ -625,68 +874,103 @@
             `;
             
             // Page numbers
-            const maxVisiblePages = 5;
-            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-            
-            if (startPage > 1) {
-                paginationHtml += `<button onclick="changePage('${type}', 1)">1</button>`;
-                if (startPage > 2) {
-                    paginationHtml += `<span>...</span>`;
-                }
-            }
-            
-            for (let i = startPage; i <= endPage; i++) {
+            for (let i = 1; i <= TOTAL_PAGES; i++) {
                 paginationHtml += `
                     <button onclick="changePage('${type}', ${i})" 
                             ${i === currentPage ? 'class="active"' : ''}>${i}</button>
                 `;
             }
             
-            if (endPage < totalPages) {
-                if (endPage < totalPages - 1) {
-                    paginationHtml += `<span>...</span>`;
-                }
-                paginationHtml += `<button onclick="changePage('${type}', ${totalPages})">${totalPages}</button>`;
-            }
-            
             // Next button
             paginationHtml += `
                 <button onclick="changePage('${type}', ${currentPage + 1})"
-                        ${currentPage === totalPages ? 'disabled' : ''}>Next</button>
+                        ${currentPage === TOTAL_PAGES ? 'disabled' : ''}>Next</button>
             `;
             
             pagination.innerHTML = paginationHtml;
         }
 
         function changePage(type, page) {
-            if (page < 1) return;
+            if (page < 1 || page > TOTAL_PAGES) return;
+            
+            // Add smooth scroll to top
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+            
             currentPage[type] = page;
             loadContent(type);
         }
 
-        async function loadContent(type) {
-            const container = document.getElementById(type);
-            container.innerHTML = '<div class="loading">Loading...</div>';
-            
-            const data = await fetchData(`/api/${type}`, currentPage[type]);
-            if (!data) {
-                container.innerHTML = '<div class="error">Failed to load content</div>';
-                return;
-            }
+        function showLoading() {
+            document.querySelector('.loading-overlay').classList.add('active');
+        }
 
-            if (type === 'news') {
-                allData.news = data.articles;
-                container.innerHTML = data.articles.map(createNewsItem).join('');
-                updatePagination(type, data.totalPages, data.currentPage);
-            } else if (type === 'papers') {
-                allData.papers = data.papers;
-                container.innerHTML = data.papers.map(createPaperItem).join('');
-                updatePagination(type, data.totalPages, data.currentPage);
-            } else if (type === 'videos') {
-                allData.videos = data.items;
-                container.innerHTML = data.items.map(createVideoItem).join('');
-                updatePagination(type, data.totalPages, data.currentPage);
+        function hideLoading() {
+            document.querySelector('.loading-overlay').classList.remove('active');
+        }
+
+        async function loadContent(type) {
+            showLoading();
+            const container = document.getElementById(type);
+            container.innerHTML = '<div class="loading">Loading content...</div>';
+            
+            try {
+                const data = await fetchData(`/api/${type}`, currentPage[type]);
+                if (!data) {
+                    container.innerHTML = '<div class="error">Failed to load content</div>';
+                    return;
+                }
+
+                // Add page info
+                const startItem = (currentPage[type] - 1) * ITEMS_PER_PAGE + 1;
+                const endItem = Math.min(currentPage[type] * ITEMS_PER_PAGE, TOTAL_PAGES * ITEMS_PER_PAGE);
+                const pageInfo = document.createElement('div');
+                pageInfo.className = 'page-info';
+                pageInfo.textContent = `Showing items ${startItem}-${endItem} of ${TOTAL_PAGES * ITEMS_PER_PAGE}`;
+                container.parentNode.insertBefore(pageInfo, container);
+
+                if (type === 'news') {
+                    allData.news = data.articles;
+                    const startIndex = (currentPage[type] - 1) * ITEMS_PER_PAGE;
+                    const endIndex = startIndex + ITEMS_PER_PAGE;
+                    const pageArticles = data.articles.slice(startIndex, endIndex);
+                    container.innerHTML = pageArticles.map(createNewsItem).join('');
+                    updatePagination(type, currentPage[type]);
+                } else if (type === 'papers') {
+                    allData.papers = data.papers;
+                    const startIndex = (currentPage[type] - 1) * ITEMS_PER_PAGE;
+                    const endIndex = startIndex + ITEMS_PER_PAGE;
+                    const pagePapers = data.papers.slice(startIndex, endIndex);
+                    container.innerHTML = pagePapers.map(createPaperItem).join('');
+                    updatePagination(type, currentPage[type]);
+                } else if (type === 'videos') {
+                    allData.videos = data.items;
+                    const startIndex = (currentPage[type] - 1) * ITEMS_PER_PAGE;
+                    const endIndex = startIndex + ITEMS_PER_PAGE;
+                    const pageVideos = data.items.slice(startIndex, endIndex);
+                    container.innerHTML = pageVideos.map(createVideoItem).join('');
+                    updatePagination(type, currentPage[type]);
+                } else if (type === 'reviews') {
+                    allData.reviews = data.reviews;
+                    const startIndex = (currentPage[type] - 1) * ITEMS_PER_PAGE;
+                    const endIndex = startIndex + ITEMS_PER_PAGE;
+                    const pageReviews = data.reviews.slice(startIndex, endIndex);
+                    container.innerHTML = pageReviews.map(createReviewItem).join('');
+                    updatePagination(type, currentPage[type]);
+                }
+
+                // Add page transition animation
+                container.classList.add('page-transition');
+                setTimeout(() => {
+                    container.classList.remove('page-transition');
+                }, 300);
+            } catch (error) {
+                console.error('Error loading content:', error);
+                container.innerHTML = '<div class="error">Failed to load content. Please try again.</div>';
+            } finally {
+                hideLoading();
             }
         }
 
@@ -813,6 +1097,56 @@
             } finally {
                 button.disabled = false;
             }
+        }
+
+        // Add review handling
+        document.getElementById('reviewForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const review = {
+                name: document.getElementById('reviewName').value,
+                rating: document.querySelector('input[name="rating"]:checked').value,
+                text: document.getElementById('reviewText').value,
+                date: new Date().toISOString()
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/reviews`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(review)
+                });
+
+                if (!response.ok) throw new Error('Failed to submit review');
+
+                // Clear form
+                e.target.reset();
+                
+                // Reload reviews
+                loadContent('reviews');
+                
+                // Show success message
+                alert('Thank you for your review!');
+            } catch (error) {
+                console.error('Review submission error:', error);
+                alert('Failed to submit review. Please try again.');
+            }
+        });
+
+        function createReviewItem(review) {
+            const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+            return `
+                <div class="review-item">
+                    <div class="review-header">
+                        <span class="review-author">${review.name}</span>
+                        <span class="review-date">${new Date(review.date).toLocaleDateString()}</span>
+                    </div>
+                    <div class="review-rating">${stars}</div>
+                    <p class="review-text">${review.text}</p>
+                </div>
+            `;
         }
     </script>
   </body>

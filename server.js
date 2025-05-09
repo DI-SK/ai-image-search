@@ -4,22 +4,33 @@ const path = require('path');
 const fs = require('fs');
 const fetch = require('node-fetch');
 const xml2js = require('xml2js');
+const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Initialize Supabase client
+const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_ANON_KEY
+);
+
+// MongoDB Connection
+mongoose.connect(process.env.MONGODB_URI)
+    .then(() => console.log('Connected to MongoDB'))
+    .catch(err => console.error('MongoDB connection error:', err));
 
 // Ensure data directory exists
 const dataDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
-
-app.use(cors());
-app.use(express.json());
-
-// Serve static files from the public directory
-app.use(express.static(path.join(__dirname, 'public')));
 
 // Cache files
 const NEWS_CACHE_FILE = path.join(dataDir, 'news_cache.json');
@@ -537,6 +548,55 @@ app.get('/api/cache-status', (req, res) => {
     }
   };
   res.json(status);
+});
+
+// Review routes
+app.get('/api/reviews', async (req, res) => {
+    try {
+        const { data: reviews, error } = await supabase
+            .from('reviews')
+            .select('*')
+            .order('date', { ascending: false });
+
+        if (error) throw error;
+        res.json({ reviews });
+    } catch (error) {
+        console.error('Error fetching reviews:', error);
+        res.status(500).json({ error: 'Failed to fetch reviews' });
+    }
+});
+
+app.post('/api/reviews', async (req, res) => {
+    try {
+        const { name, rating, text } = req.body;
+        
+        // Validate input
+        if (!name || !rating || !text) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        if (rating < 1 || rating > 5) {
+            return res.status(400).json({ error: 'Invalid rating value' });
+        }
+
+        const { data, error } = await supabase
+            .from('reviews')
+            .insert([
+                {
+                    name,
+                    rating,
+                    text,
+                    date: new Date().toISOString()
+                }
+            ])
+            .select();
+
+        if (error) throw error;
+        res.status(201).json(data[0]);
+    } catch (error) {
+        console.error('Error creating review:', error);
+        res.status(500).json({ error: 'Failed to create review' });
+    }
 });
 
 app.listen(PORT, () => {

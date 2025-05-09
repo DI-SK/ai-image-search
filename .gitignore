@@ -1,26 +1,53 @@
 # Dependencies
 node_modules/
-/.pnp
-.pnp.js
+npm-debug.log
+yarn-debug.log
+yarn-error.log
 
-# Testing
-/coverage
-
-# Production
-/build
-/dist
-
-# Environment files
+# Environment variables
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*.local
+
+# Build output
+build/
+dist/
+out/
+
+# Cache
+.cache/
+.npm/
+.eslintcache
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
 
 # Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+logs/
+*.log
+
+# Data files
+data/*.json
+!data/.gitkeep
+
+# Uploads
+uploads/
+!uploads/.gitkeep
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
 
 # Editor directories and files
 .idea/
