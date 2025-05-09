@@ -220,14 +220,19 @@
       to { opacity: 1; transform: translateY(0); }
     }
     .item-content a {
-      color: #a5b4fc;
+      color: #b4c8ff;
       text-decoration: none;
       font-weight: 700;
-      transition: color 0.2s;
+      padding: 2px 4px;
+      border-radius: 6px;
+      transition: color 0.2s, box-shadow 0.2s, text-decoration 0.2s;
+      outline: none;
     }
-    .item-content a:hover {
+    .item-content a:hover, .item-content a:focus {
       color: #fff;
       text-decoration: underline;
+      box-shadow: 0 0 6px 1px #6366f1cc;
+      background: rgba(99,102,241,0.08);
     }
   </style>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6348535052118886"
