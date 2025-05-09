@@ -111,6 +111,12 @@
         }
 
         .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .section {
             background: var(--glass-bg);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -119,11 +125,6 @@
             padding: 25px;
             margin-bottom: 30px;
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-        }
-
-        .container:hover {
-            transform: translateY(-5px);
         }
 
         h2 {
@@ -254,24 +255,11 @@
             cursor: pointer;
             transition: all 0.3s ease;
             border: 1px solid var(--glass-border);
-            min-width: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
-        .pagination button:hover:not(:disabled) {
+        .pagination button:hover {
             background: var(--primary-gradient);
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
-        }
-
-        .pagination button:disabled {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text-secondary);
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
         }
 
         .pagination button.active {
@@ -280,65 +268,16 @@
             box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
         }
 
-        .page-info {
-            text-align: center;
-            color: var(--text-secondary);
-            margin: 20px 0;
-            font-size: 0.9rem;
-        }
-
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(5px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .loading-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid var(--primary-gradient);
-            border-radius: 50%;
-            border-top-color: transparent;
-            animation: spin 1s linear infinite;
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
-        /* Page Transition Animation */
-        .page-transition {
-            animation: fadeSlide 0.3s ease;
-        }
-
-        @keyframes fadeSlide {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Mobile Optimization for Pagination */
         @media (max-width: 768px) {
             .nav {
                 flex-direction: column;
@@ -364,269 +303,7 @@
             }
 
             .pagination button {
-                padding: 8px 12px;
-                font-size: 0.9rem;
-            }
-        }
-
-        .summary-button {
-            background: var(--primary-gradient);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-            font-size: 0.9rem;
-        }
-
-        .summary-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
-        }
-
-        .summary-button:disabled {
-            background: var(--glass-bg);
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .summary {
-            margin-top: 15px;
-            padding: 15px;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 8px;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .summary h4 {
-            color: var(--text-primary);
-            margin-bottom: 10px;
-            font-size: 1rem;
-        }
-
-        .summary p {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-
-        /* Social sharing buttons */
-        .share-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .share-button {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 8px;
-            padding: 8px 12px;
-            color: var(--text-primary);
-            text-decoration: none;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.3s ease;
-        }
-
-        .share-button:hover {
-            background: var(--primary-gradient);
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .share-button i {
-            font-size: 1.1rem;
-        }
-
-        /* Add Font Awesome for icons */
-        @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
-
-        /* Add ad container styles */
-        .ad-container {
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 20px;
-            margin: 20px 0;
-            text-align: center;
-            min-height: 100px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .ad-container p {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin: 0;
-        }
-
-        /* Responsive ad sizes */
-        @media (max-width: 768px) {
-            .ad-container {
-                min-height: 60px;
-            }
-        }
-
-        /* Review Form Styles */
-        .review-form {
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-
-        .review-form h3 {
-            margin-bottom: 20px;
-            color: var(--text-primary);
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--text-primary);
-        }
-
-        .form-group input[type="text"],
-        .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid var(--glass-border);
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text-primary);
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .form-group input[type="text"]:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #6366f1;
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-        }
-
-        .form-group textarea {
-            min-height: 120px;
-            resize: vertical;
-        }
-
-        .star-rating {
-            display: flex;
-            flex-direction: row-reverse;
-            justify-content: flex-start;
-            gap: 5px;
-        }
-
-        .star-rating input {
-            display: none;
-        }
-
-        .star-rating label {
-            cursor: pointer;
-            font-size: 30px;
-            color: #ddd;
-            padding: 5px;
-            transition: color 0.3s ease;
-        }
-
-        .star-rating label:hover,
-        .star-rating label:hover ~ label,
-        .star-rating input:checked ~ label {
-            color: #ffd700;
-        }
-
-        .submit-button {
-            background: var(--primary-gradient);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            width: 100%;
-        }
-
-        .submit-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
-        }
-
-        /* Review Item Styles */
-        .review-item {
-            background: var(--glass-bg);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .review-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .review-author {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .review-date {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .review-rating {
-            color: #ffd700;
-            margin: 10px 0;
-            font-size: 1.2rem;
-        }
-
-        .review-text {
-            color: var(--text-secondary);
-            line-height: 1.6;
-        }
-
-        /* Mobile Optimization for Reviews */
-        @media (max-width: 768px) {
-            .review-form {
-                padding: 15px;
-            }
-
-            .star-rating label {
-                font-size: 24px;
-            }
-
-            .review-item {
-                padding: 15px;
-            }
-
-            .review-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 5px;
+                padding: 8px 15px;
             }
         }
     </style>
@@ -635,92 +312,32 @@
      crossorigin="anonymous"></script>
   </head>
   <body>
-    <div class="nav">
-        <h1>AI Trending Now</h1>
-        <div>
-            <a href="#" class="active" data-page="news">News</a>
-            <a href="#" data-page="papers">Research</a>
-            <a href="#" data-page="videos">Videos</a>
-            <a href="#" data-page="reviews">Reviews</a>
-        </div>
-    </div>
-    
-    <div id="news-page" class="page active">
-        <div class="container">
-            <h2>Latest AI News</h2>
-            <!-- Top ad spot -->
-            <div class="ad-container" id="ad-container-news-top"></div>
-            <div id="news"></div>
-            <!-- Bottom ad spot -->
-            <div class="ad-container" id="ad-container-news-bottom"></div>
-            <div class="pagination" id="news-pagination"></div>
-        </div>
-    </div>
-
-    <div id="papers-page" class="page">
-        <div class="container">
-            <h2>AI Research Papers</h2>
-            <!-- Top ad spot -->
-            <div class="ad-container" id="ad-container-papers-top"></div>
-            <div id="papers"></div>
-            <!-- Bottom ad spot -->
-            <div class="ad-container" id="ad-container-papers-bottom"></div>
-            <div class="pagination" id="papers-pagination"></div>
-        </div>
-    </div>
-
-    <div id="videos-page" class="page">
-        <div class="container">
-            <h2>AI Videos</h2>
-            <!-- Top ad spot -->
-            <div class="ad-container" id="ad-container-videos-top"></div>
-            <div id="videos"></div>
-            <!-- Bottom ad spot -->
-            <div class="ad-container" id="ad-container-videos-bottom"></div>
-            <div class="pagination" id="videos-pagination"></div>
-        </div>
-    </div>
-
-    <div id="reviews-page" class="page">
-        <div class="container">
-            <h2>User Reviews</h2>
-            <div class="review-form">
-                <h3>Share Your Experience</h3>
-                <form id="reviewForm">
-                    <div class="form-group">
-                        <label for="reviewName">Name</label>
-                        <input type="text" id="reviewName" required placeholder="Your name">
-                    </div>
-                    <div class="form-group">
-                        <label for="reviewRating">Rating</label>
-                        <div class="star-rating">
-                            <input type="radio" id="star5" name="rating" value="5" required />
-                            <label for="star5">★</label>
-                            <input type="radio" id="star4" name="rating" value="4" />
-                            <label for="star4">★</label>
-                            <input type="radio" id="star3" name="rating" value="3" />
-                            <label for="star3">★</label>
-                            <input type="radio" id="star2" name="rating" value="2" />
-                            <label for="star2">★</label>
-                            <input type="radio" id="star1" name="rating" value="1" />
-                            <label for="star1">★</label>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="reviewText">Review</label>
-                        <textarea id="reviewText" required placeholder="Share your thoughts about our AI news aggregator..."></textarea>
-                    </div>
-                    <button type="submit" class="submit-button">Submit Review</button>
-                </form>
+    <div class="container">
+        <nav class="nav">
+            <h1>AI Trending Now</h1>
+            <div>
+                <a href="/" class="active">News</a>
+                <a href="/reviews.html">Reviews</a>
             </div>
-            <div id="reviews" class="reviews-container"></div>
-            <div class="pagination" id="reviews-pagination"></div>
-        </div>
-    </div>
+        </nav>
 
-    <!-- Add loading overlay -->
-    <div class="loading-overlay">
-        <div class="loading-spinner"></div>
+        <section class="section" id="news-section">
+            <h2>Latest AI News</h2>
+            <div id="news-container"></div>
+            <div class="pagination" id="news-pagination"></div>
+        </section>
+
+        <section class="section" id="papers-section">
+            <h2>AI Research Papers</h2>
+            <div id="papers-container"></div>
+            <div class="pagination" id="papers-pagination"></div>
+        </section>
+
+        <section class="section" id="videos-section">
+            <h2>AI Videos</h2>
+            <div id="videos-container"></div>
+            <div class="pagination" id="videos-pagination"></div>
+        </section>
     </div>
 
     <script>
