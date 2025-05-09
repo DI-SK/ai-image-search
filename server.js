@@ -21,24 +21,21 @@ const supabase = createClient(
     process.env.SUPABASE_ANON_KEY
 );
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('MongoDB connection error:', err));
+// Cache files
+const CACHE_DIR = path.join(__dirname, 'data');
+const CACHE_FILES = {
+    news: path.join(CACHE_DIR, 'news_cache.json'),
+    papers: path.join(CACHE_DIR, 'papers_cache.json'),
+    videos: path.join(CACHE_DIR, 'video_cache.json')
+};
 
-// Ensure data directory exists
-const dataDir = path.join(__dirname, 'data');
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
+// Ensure cache directory exists
+if (!fs.existsSync(CACHE_DIR)) {
+    fs.mkdirSync(CACHE_DIR, { recursive: true });
 }
 
-// Cache files
-const NEWS_CACHE_FILE = path.join(dataDir, 'news_cache.json');
-const VIDEOS_CACHE_FILE = path.join(dataDir, 'video_cache.json');
-const PAPERS_CACHE_FILE = path.join(dataDir, 'papers_cache.json');
-
 // Cache metadata
-const CACHE_METADATA_FILE = path.join(dataDir, 'cache_metadata.json');
+const CACHE_METADATA_FILE = path.join(CACHE_DIR, 'cache_metadata.json');
 
 // Load cache metadata
 let cacheMetadata = {
@@ -62,8 +59,8 @@ let cachedVideos = [];
 let cachedPapers = [];
 
 try {
-  if (fs.existsSync(NEWS_CACHE_FILE)) {
-    cachedNews = JSON.parse(fs.readFileSync(NEWS_CACHE_FILE, 'utf8'));
+  if (fs.existsSync(CACHE_FILES.news)) {
+    cachedNews = JSON.parse(fs.readFileSync(CACHE_FILES.news, 'utf8'));
   }
 } catch (e) { 
   console.warn('Could not load news cache:', e.message);
@@ -71,8 +68,8 @@ try {
 }
 
 try {
-  if (fs.existsSync(VIDEOS_CACHE_FILE)) {
-    cachedVideos = JSON.parse(fs.readFileSync(VIDEOS_CACHE_FILE, 'utf8'));
+  if (fs.existsSync(CACHE_FILES.videos)) {
+    cachedVideos = JSON.parse(fs.readFileSync(CACHE_FILES.videos, 'utf8'));
   }
 } catch (e) { 
   console.warn('Could not load videos cache:', e.message);
@@ -80,8 +77,8 @@ try {
 }
 
 try {
-  if (fs.existsSync(PAPERS_CACHE_FILE)) {
-    cachedPapers = JSON.parse(fs.readFileSync(PAPERS_CACHE_FILE, 'utf8'));
+  if (fs.existsSync(CACHE_FILES.papers)) {
+    cachedPapers = JSON.parse(fs.readFileSync(CACHE_FILES.papers, 'utf8'));
   }
 } catch (e) { 
   console.warn('Could not load papers cache:', e.message);
@@ -219,7 +216,7 @@ app.get('/api/news', async (req, res) => {
 
         if (articles.length > 0) {
           cachedNews = articles;
-          fs.writeFileSync(NEWS_CACHE_FILE, JSON.stringify(cachedNews));
+          fs.writeFileSync(CACHE_FILES.news, JSON.stringify(cachedNews));
           cacheMetadata.news.lastUpdate = new Date().toISOString();
           cacheMetadata.news.totalPages = Math.ceil(articles.length / pageSize);
           saveCacheMetadata();
@@ -311,7 +308,7 @@ app.get('/api/videos', async (req, res) => {
 
         if (uniqueItems.length > 0) {
           cachedVideos = uniqueItems;
-          fs.writeFileSync(VIDEOS_CACHE_FILE, JSON.stringify(cachedVideos));
+          fs.writeFileSync(CACHE_FILES.videos, JSON.stringify(cachedVideos));
           cacheMetadata.videos.lastUpdate = new Date().toISOString();
           cacheMetadata.videos.totalPages = Math.ceil(uniqueItems.length / pageSize);
           saveCacheMetadata();
@@ -379,7 +376,7 @@ app.get('/api/papers', async (req, res) => {
         
         if (papers.length > 0) {
           cachedPapers = papers;
-          fs.writeFileSync(PAPERS_CACHE_FILE, JSON.stringify(cachedPapers));
+          fs.writeFileSync(CACHE_FILES.papers, JSON.stringify(cachedPapers));
           cacheMetadata.papers.lastUpdate = new Date().toISOString();
           cacheMetadata.papers.totalPages = Math.ceil(papers.length / pageSize);
           saveCacheMetadata();
@@ -404,7 +401,7 @@ app.get('/api/papers', async (req, res) => {
 });
 
 // Add summary cache
-const SUMMARY_CACHE_FILE = path.join(dataDir, 'summary_cache.json');
+const SUMMARY_CACHE_FILE = path.join(CACHE_DIR, 'summary_cache.json');
 let summaryCache = {};
 
 try {
