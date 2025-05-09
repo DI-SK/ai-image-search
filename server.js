@@ -266,7 +266,10 @@ app.get('/api/videos', async (req, res) => {
           let url = `https://www.googleapis.com/youtube/v3/search?key=${process.env.YT_API_KEY}&channelId=${channelId}&part=snippet&type=video&maxResults=10&order=date&publishedAfter=${publishedAfterISO}`;
           if (nextPageToken) url += `&pageToken=${nextPageToken}`;
           const response = await fetch(url);
-          if (!response.ok) break;
+          const contentType = response.headers.get('content-type');
+          if (!response.ok || !contentType || !contentType.includes('application/json')) {
+            throw new Error('YouTube API error or quota exceeded');
+          }
           const data = await response.json();
           if (data.items) allItems.push(...data.items);
           nextPageToken = data.nextPageToken;
@@ -287,6 +290,7 @@ app.get('/api/videos', async (req, res) => {
       }
     } catch (error) {
       console.error('Videos API error:', error.message);
+      return res.status(500).json({ error: 'Failed to fetch videos. YouTube API error or quota exceeded.' });
     }
   } else {
     console.log('Using cached videos data');
