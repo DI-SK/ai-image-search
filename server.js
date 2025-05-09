@@ -177,7 +177,7 @@ app.get('/api/news', async (req, res) => {
   }
 
   const page = parseInt(req.query.page) || 1;
-  const pageSize = 5;
+  const pageSize = 10;
   const startIndex = (page - 1) * pageSize;
   const endIndex = startIndex + pageSize;
 
@@ -185,21 +185,17 @@ app.get('/api/news', async (req, res) => {
   if (needsUpdate('news')) {
     console.log('Updating news cache...');
     try {
-      // Check rate limits before making API calls
       if (!checkRateLimits('gnews')) {
         console.log('Using cached news data due to rate limits');
       } else {
-        // Fetch multiple pages of news to get more content
+        // Fetch 5 pages of 10 each = 50 articles
         const newsPromises = [];
-        for (let i = 1; i <= 3; i++) {
-          const url = `https://gnews.io/api/v4/search?q=ai&lang=en&max=50&page=${i}&token=${process.env.GNEWS_API_KEY}`;
+        for (let i = 1; i <= 5; i++) {
+          const url = `https://gnews.io/api/v4/search?q=ai&lang=en&max=10&page=${i}&token=${process.env.GNEWS_API_KEY}`;
           newsPromises.push(fetch(url).then(res => res.json()));
         }
-
         const results = await Promise.all(newsPromises);
         let articles = [];
-        
-        // Combine articles from all pages
         results.forEach(result => {
           if (result.articles && result.articles.length > 0) {
             articles = articles.concat(result.articles.map(article => ({
@@ -208,12 +204,10 @@ app.get('/api/news', async (req, res) => {
             })));
           }
         });
-
         // Remove duplicates based on URL
         articles = articles.filter((article, index, self) =>
           index === self.findIndex((a) => a.url === article.url)
         );
-
         if (articles.length > 0) {
           cachedNews = articles;
           fs.writeFileSync(CACHE_FILES.news, JSON.stringify(cachedNews));
@@ -233,8 +227,6 @@ app.get('/api/news', async (req, res) => {
   // Return paginated results
   const paginatedArticles = cachedNews.slice(startIndex, endIndex);
   const totalPages = Math.ceil(cachedNews.length / pageSize);
-  console.log(`News pagination: page ${page}, total pages ${totalPages}, items ${paginatedArticles.length}`);
-  
   res.json({
     articles: paginatedArticles,
     totalPages: totalPages,
@@ -254,58 +246,36 @@ app.get('/api/videos', async (req, res) => {
   }
 
   const page = parseInt(req.query.page) || 1;
-  const pageSize = 5;
+  const pageSize = 10;
   const startIndex = (page - 1) * pageSize;
   const endIndex = startIndex + pageSize;
 
-  // Check if we need to update the cache
   if (needsUpdate('videos')) {
     console.log('Updating videos cache...');
     try {
-      // Check rate limits before making API calls
       if (!checkRateLimits('youtube')) {
         console.log('Using cached videos data due to rate limits');
       } else {
         const channelId = 'UC_x5XG1OV2P6uZZ5FSM9Ttw'; // Google Developers
         const publishedAfter = new Date();
-        publishedAfter.setDate(publishedAfter.getDate() - 7); // 7 days ago
+        publishedAfter.setDate(publishedAfter.getDate() - 30); // last 30 days
         const publishedAfterISO = publishedAfter.toISOString();
-
-        // Fetch multiple pages of videos
-        const videoPromises = [];
+        let allItems = [];
         let nextPageToken = null;
-        
-        for (let i = 0; i < 3; i++) {
-          let url = `https://www.googleapis.com/youtube/v3/search?key=${process.env.YT_API_KEY}&channelId=${channelId}&part=snippet&type=video&maxResults=50&order=date&publishedAfter=${publishedAfterISO}`;
-          if (nextPageToken) {
-            url += `&pageToken=${nextPageToken}`;
-          }
-          
+        for (let i = 0; i < 5; i++) { // Try to get up to 50 videos
+          let url = `https://www.googleapis.com/youtube/v3/search?key=${process.env.YT_API_KEY}&channelId=${channelId}&part=snippet&type=video&maxResults=10&order=date&publishedAfter=${publishedAfterISO}`;
+          if (nextPageToken) url += `&pageToken=${nextPageToken}`;
           const response = await fetch(url);
-          if (!response.ok) {
-            throw new Error(`YouTube API responded with status: ${response.status}`);
-          }
-          
+          if (!response.ok) break;
           const data = await response.json();
-          if (data.items) {
-            videoPromises.push(...data.items);
-          }
-          
+          if (data.items) allItems.push(...data.items);
           nextPageToken = data.nextPageToken;
           if (!nextPageToken) break;
         }
-
-        // Filter videos from the last 7 days
-        const filteredItems = videoPromises.filter(item => {
-          const publishedAt = new Date(item.snippet.publishedAt);
-          return publishedAt >= publishedAfter;
-        });
-
         // Remove duplicates
-        const uniqueItems = filteredItems.filter((item, index, self) =>
+        const uniqueItems = allItems.filter((item, index, self) =>
           index === self.findIndex((i) => i.id.videoId === item.id.videoId)
         );
-
         if (uniqueItems.length > 0) {
           cachedVideos = uniqueItems;
           fs.writeFileSync(CACHE_FILES.videos, JSON.stringify(cachedVideos));
@@ -325,8 +295,6 @@ app.get('/api/videos', async (req, res) => {
   // Return paginated results
   const paginatedVideos = cachedVideos.slice(startIndex, endIndex);
   const totalPages = Math.ceil(cachedVideos.length / pageSize);
-  console.log(`Videos pagination: page ${page}, total pages ${totalPages}, items ${paginatedVideos.length}`);
-  
   res.json({
     items: paginatedVideos,
     totalPages: totalPages,
