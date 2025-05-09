@@ -3,7 +3,40 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Trending Now</title>
+    <title>AI Trending Now - Latest AI News, Research Papers & Videos</title>
+    <meta name="description" content="Stay updated with the latest AI news, research papers, and videos. Get real-time updates on artificial intelligence, machine learning, and tech innovations.">
+    <meta name="keywords" content="AI news, artificial intelligence, machine learning, AI research papers, AI videos, tech news, AI updates">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ai-image-search-1-gqux.onrender.com/">
+    <meta property="og:title" content="AI Trending Now - Latest AI News & Research">
+    <meta property="og:description" content="Stay updated with the latest AI news, research papers, and videos. Get real-time updates on artificial intelligence and tech innovations.">
+    <meta property="og:image" content="https://ai-image-search-1-gqux.onrender.com/og-image.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://ai-image-search-1-gqux.onrender.com/">
+    <meta property="twitter:title" content="AI Trending Now - Latest AI News & Research">
+    <meta property="twitter:description" content="Stay updated with the latest AI news, research papers, and videos. Get real-time updates on artificial intelligence and tech innovations.">
+    <meta property="twitter:image" content="https://ai-image-search-1-gqux.onrender.com/og-image.jpg">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "AI Trending Now",
+      "url": "https://ai-image-search-1-gqux.onrender.com/",
+      "description": "Stay updated with the latest AI news, research papers, and videos. Get real-time updates on artificial intelligence and tech innovations.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://ai-image-search-1-gqux.onrender.com/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <style>
         :root {
@@ -329,6 +362,40 @@
             line-height: 1.6;
         }
 
+        /* Social sharing buttons */
+        .share-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .share-button {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .share-button:hover {
+            background: var(--primary-gradient);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .share-button i {
+            font-size: 1.1rem;
+        }
+
+        /* Add Font Awesome for icons */
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
+
         /* Add ad container styles */
         .ad-container {
             background: var(--glass-bg);
@@ -434,12 +501,20 @@
         }
 
         function createNewsItem(article) {
-            console.log('News article:', article); // Debug log
+            console.log('News article:', article);
             const imageUrl = article.image || article.urlToImage || `https://picsum.photos/200/120?random=${Math.random()}`;
             const safeTitle = article.title.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
             const safeDescription = article.description.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
             const safeContent = `${safeTitle}. ${safeDescription}`;
             const safeId = safeTitle.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+            
+            // Create share URLs
+            const shareUrls = {
+                twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(safeTitle)}&url=${encodeURIComponent(article.url)}`,
+                facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(article.url)}`,
+                linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(article.url)}`
+            };
+
             return `
                 <div class="news-item">
                     <img src="${imageUrl}" alt="${safeTitle}" class="thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=No+Image'">
@@ -451,6 +526,17 @@
                             Summarize
                         </button>
                         <div id="summary-news-${safeId}" class="summary" style="display: none;"></div>
+                        <div class="share-buttons">
+                            <a href="${shareUrls.twitter}" target="_blank" class="share-button">
+                                <i class="fab fa-twitter"></i> Share
+                            </a>
+                            <a href="${shareUrls.facebook}" target="_blank" class="share-button">
+                                <i class="fab fa-facebook"></i> Share
+                            </a>
+                            <a href="${shareUrls.linkedin}" target="_blank" class="share-button">
+                                <i class="fab fa-linkedin"></i> Share
+                            </a>
+                        </div>
                     </div>
                 </div>
             `;
@@ -481,7 +567,7 @@
         }
 
         function createVideoItem(video) {
-            console.log('Video:', video); // Debug log
+            console.log('Video:', video);
             const thumbnailUrl = video.snippet?.thumbnails?.high?.url || 
                                video.snippet?.thumbnails?.medium?.url || 
                                video.snippet?.thumbnails?.default?.url || 
@@ -492,25 +578,37 @@
             const safeContent = `${safeTitle}. ${safeDescription}`;
             const safeId = safeTitle.replace(/[^a-z0-9]/gi, '-').toLowerCase();
             
-            // Calculate days ago
-            const publishedAt = new Date(video.snippet.publishedAt);
-            const now = new Date();
-            const daysAgo = Math.floor((now - publishedAt) / (1000 * 60 * 60 * 24));
-            const timeAgo = daysAgo === 0 ? 'Today' : 
-                           daysAgo === 1 ? 'Yesterday' : 
-                           `${daysAgo} days ago`;
+            const videoUrl = `https://www.youtube.com/watch?v=${video.id.videoId}`;
+            
+            // Create share URLs
+            const shareUrls = {
+                twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(safeTitle)}&url=${encodeURIComponent(videoUrl)}`,
+                facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(videoUrl)}`,
+                linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(videoUrl)}`
+            };
 
             return `
                 <div class="video-item">
                     <img src="${thumbnailUrl}" alt="${safeTitle}" class="thumbnail" onerror="this.src='https://via.placeholder.com/200x120?text=No+Thumbnail'">
                     <div class="content">
-                        <h3><a href="https://www.youtube.com/watch?v=${video.id.videoId}" target="_blank">${safeTitle}</a></h3>
+                        <h3><a href="${videoUrl}" target="_blank">${safeTitle}</a></h3>
                         <p>${safeDescription}</p>
-                        <small>Published: ${timeAgo}</small>
+                        <small>Published: ${new Date(video.snippet.publishedAt).toLocaleDateString()}</small>
                         <button class="summary-button" onclick="summarizeContent('video', '${safeId}', '${safeContent}')">
                             Summarize
                         </button>
                         <div id="summary-video-${safeId}" class="summary" style="display: none;"></div>
+                        <div class="share-buttons">
+                            <a href="${shareUrls.twitter}" target="_blank" class="share-button">
+                                <i class="fab fa-twitter"></i> Share
+                            </a>
+                            <a href="${shareUrls.facebook}" target="_blank" class="share-button">
+                                <i class="fab fa-facebook"></i> Share
+                            </a>
+                            <a href="${shareUrls.linkedin}" target="_blank" class="share-button">
+                                <i class="fab fa-linkedin"></i> Share
+                            </a>
+                        </div>
                     </div>
                 </div>
             `;

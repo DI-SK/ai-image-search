@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Allow: /api/news
+Allow: /api/videos
+Allow: /api/papers
+Disallow: /api/summarize
+
+Sitemap: https://ai-image-search-1-gqux.onrender.com/sitemap.xml 
