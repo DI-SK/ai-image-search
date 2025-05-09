@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Trending Now - Videos</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      --glass-bg: rgba(24, 26, 40, 0.92);
+      --glass-border: rgba(99, 102, 241, 0.18);
+      --text-primary: #e2e8f0;
+      --text-secondary: #a1a1aa;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(120deg, #181926 0%, #232946 100%);
+      color: var(--text-primary);
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 900px;
+      margin: 40px auto 0 auto;
+      padding: 0 16px;
+    }
+    .nav {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 18px;
+      padding: 24px 32px;
+      margin-bottom: 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+    }
+    .nav h1 {
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      margin: 0;
+    }
+    .nav-links {
+      display: flex;
+      gap: 12px;
+    }
+    .nav a {
+      color: var(--text-primary);
+      text-decoration: none;
+      padding: 8px 22px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    }
+    .nav a.active, .nav a:hover {
+      background: var(--primary-gradient);
+      color: #fff;
+      box-shadow: 0 2px 12px 0 rgba(99,102,241,0.15);
+    }
+    .section {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 28px 22px 22px 22px;
+      margin-bottom: 32px;
+      box-shadow: 0 4px 24px 0 rgba(31, 38, 135, 0.13);
+    }
+    h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 18px;
+      color: var(--text-primary);
+      letter-spacing: 0.5px;
+      position: relative;
+      padding-bottom: 8px;
+    }
+    h2::after {
+      content: '';
+      display: block;
+      width: 44px;
+      height: 3px;
+      background: var(--primary-gradient);
+      border-radius: 2px;
+      margin-top: 6px;
+    }
+    .item {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      display: flex;
+      gap: 18px;
+      margin-bottom: 18px;
+      padding: 18px 16px;
+      align-items: flex-start;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .item:hover {
+      box-shadow: 0 4px 18px 0 rgba(99,102,241,0.13);
+      transform: translateY(-2px) scale(1.01);
+    }
+    .thumbnail {
+      width: 140px;
+      height: 90px;
+      object-fit: cover;
+      border-radius: 8px;
+      background: #222;
+      flex-shrink: 0;
+    }
+    .item-content {
+      flex: 1;
+    }
+    .item-content h3 {
+      margin: 0 0 8px 0;
+      font-size: 1.08rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .item-content p {
+      margin: 0 0 8px 0;
+      color: var(--text-secondary);
+      font-size: 0.98rem;
+    }
+    .item-content small {
+      color: var(--text-secondary);
+      font-size: 0.92rem;
+    }
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 7px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+    .pagination button {
+      padding: 7px 16px;
+      border: none;
+      background: var(--glass-bg);
+      color: var(--text-primary);
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      border: 1px solid var(--glass-border);
+      transition: background 0.2s, color 0.2s;
+    }
+    .pagination button.active, .pagination button:hover {
+      background: var(--primary-gradient);
+      color: #fff;
+    }
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .loading {
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      padding: 30px 0;
+    }
+    .error {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.18);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 10px 0;
+      text-align: center;
+    }
+    @media (max-width: 700px) {
+      .container { padding: 0 4px; }
+      .nav { flex-direction: column; gap: 12px; padding: 18px 10px; }
+      .section { padding: 16px 6px; }
+      .item { flex-direction: column; gap: 10px; padding: 12px 6px; }
+      .thumbnail { width: 100%; height: 160px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="nav">
+      <h1>AI Trending Now</h1>
+      <div class="nav-links">
+        <a href="/news.html">News</a>
+        <a href="/papers.html">Research</a>
+        <a href="/videos.html" class="active">Videos</a>
+        <a href="/reviews.html">Reviews</a>
+      </div>
+    </nav>
+    <section class="section" id="videos-section">
+      <h2>AI Videos</h2>
+      <div id="videos-list"></div>
+      <div class="pagination" id="videos-pagination"></div>
+    </section>
+  </div>
+  <script>
+    const API_BASE = window.location.origin;
+    const ITEMS_PER_PAGE = 10;
+    let currentPage = 1;
+    async function loadVideos(page = 1) {
+      const list = document.getElementById('videos-list');
+      const pag = document.getElementById('videos-pagination');
+      list.innerHTML = '<div class="loading">Loading videos...</div>';
+      pag.innerHTML = '';
+      try {
+        const res = await fetch(`${API_BASE}/api/videos?page=${page}`);
+        const data = await res.json();
+        if (!data.items || !data.items.length) throw new Error(data.error || 'No videos found');
+        list.innerHTML = data.items.map(video => `
+          <div class="item">
+            <img class="thumbnail" src="${video.snippet?.thumbnails?.high?.url || 'https://picsum.photos/200/120?random=' + Math.random()}" alt="${video.snippet.title}">
+            <div class="item-content">
+              <h3><a href="https://www.youtube.com/watch?v=${video.id.videoId}" target="_blank">${video.snippet.title}</a></h3>
+              <p>${video.snippet.description}</p>
+              <small>Published: ${new Date(video.snippet.publishedAt).toLocaleDateString()}</small>
+            </div>
+          </div>
+        `).join('');
+        renderPagination(data.totalPages, page);
+      } catch (e) {
+        list.innerHTML = `<div class="error">${e.message}</div>`;
+      }
+    }
+    function renderPagination(totalPages, current) {
+      const pag = document.getElementById('videos-pagination');
+      let html = '';
+      html += `<button onclick="gotoPage(${current-1})" ${current===1?'disabled':''}>Prev</button>`;
+      for (let i=1; i<=totalPages; i++) {
+        if (i===1 || i===totalPages || (i>=current-2 && i<=current+2)) {
+          html += `<button onclick="gotoPage(${i})" class="${i===current?'active':''}">${i}</button>`;
+        } else if (i===current-3 || i===current+3) {
+          html += `<button disabled>...</button>`;
+        }
+      }
+      html += `<button onclick="gotoPage(${current+1})" ${current===totalPages?'disabled':''}>Next</button>`;
+      pag.innerHTML = html;
+    }
+    window.gotoPage = function(page) {
+      if (page<1) return;
+      currentPage = page;
+      loadVideos(page);
+      document.getElementById('videos-section').scrollIntoView({behavior:'smooth'});
+    }
+    window.addEventListener('DOMContentLoaded',()=>{
+      loadVideos();
+    });
+  </script>
+</body>
+</html> 

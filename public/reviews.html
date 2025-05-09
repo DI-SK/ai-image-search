@@ -3,69 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reviews - AI Trending Now</title>
+    <title>AI Trending Now - Reviews</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            --glass-bg: rgba(255, 255, 255, 0.1);
-            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-bg: rgba(24, 26, 40, 0.92);
+            --glass-border: rgba(99, 102, 241, 0.18);
             --text-primary: #e2e8f0;
-            --text-secondary: #94a3b8;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            --text-secondary: #a1a1aa;
         }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             min-height: 100vh;
-            background: #0f172a;
+            background: linear-gradient(120deg, #181926 0%, #232946 100%);
             color: var(--text-primary);
-            line-height: 1.6;
-            padding: 20px;
-            background-image: 
-                radial-gradient(circle at 100% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 0% 100%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+            margin: 0;
+            padding: 0;
         }
 
         .container {
-            max-width: 800px;
-            margin: 0 auto;
+            max-width: 900px;
+            margin: 40px auto 0 auto;
+            padding: 0 16px;
+        }
+
+        .nav {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 24px 32px;
+            margin-bottom: 36px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+        }
+
+        .nav h1 {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 12px;
+        }
+
+        .nav a {
+            color: var(--text-primary);
+            text-decoration: none;
+            padding: 8px 22px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+        }
+
+        .nav a.active, .nav a:hover {
+            background: var(--primary-gradient);
+            color: #fff;
+            box-shadow: 0 2px 12px 0 rgba(99,102,241,0.15);
+        }
+
+        .section {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 28px 22px 22px 22px;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 24px 0 rgba(31, 38, 135, 0.13);
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 18px;
+            color: var(--text-primary);
+            letter-spacing: 0.5px;
+            position: relative;
+            padding-bottom: 8px;
+        }
+
+        h2::after {
+            content: '';
+            display: block;
+            width: 44px;
+            height: 3px;
+            background: var(--primary-gradient);
+            border-radius: 2px;
+            margin-top: 6px;
         }
 
         .review-form {
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.04);
             border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 25px;
-            margin-bottom: 30px;
+            border-radius: 12px;
+            padding: 22px 16px;
+            margin-bottom: 24px;
         }
 
-        .review-form h2 {
-            margin-bottom: 20px;
+        .review-form h3 {
+            margin-bottom: 16px;
             color: var(--text-primary);
-            font-size: 1.5rem;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             color: var(--text-primary);
         }
 
         .form-group input[type="text"],
         .form-group textarea {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             border-radius: 8px;
             border: 1px solid var(--glass-border);
             background: rgba(255, 255, 255, 0.05);
@@ -74,15 +137,8 @@
             transition: all 0.3s ease;
         }
 
-        .form-group input[type="text"]:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #6366f1;
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-        }
-
         .form-group textarea {
-            min-height: 120px;
+            min-height: 80px;
             resize: vertical;
         }
 
@@ -99,9 +155,9 @@
 
         .star-rating label {
             cursor: pointer;
-            font-size: 30px;
+            font-size: 26px;
             color: #ddd;
-            padding: 5px;
+            padding: 3px;
             transition: color 0.3s ease;
         }
 
@@ -115,7 +171,7 @@
             background: var(--primary-gradient);
             color: white;
             border: none;
-            padding: 12px 24px;
+            padding: 10px 20px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 1rem;
