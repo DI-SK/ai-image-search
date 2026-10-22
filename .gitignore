@@ -71,4 +71,7 @@ uploads/
 node
 calculator*
 bing-visual-search-server.js
-ai-image-search* 
+ai-image-search* node_modules/
+.env
+data/
+public_old/
